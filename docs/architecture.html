@@ -5,76 +5,119 @@
 <title>架构</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #f7f4ee; }
   body {
-    width: 1280px; height: 720px;
-    background: #f4f1ea;
-    color: #1c1915;
-    font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
-    padding: 48px 56px 40px;
+    width: 1440px;
+    height: 860px;
+    color: #1a1814;
+    font-family: "Songti SC", "Noto Serif SC", serif;
+    padding: 64px 72px 56px;
   }
-  h1 { font-size: 28px; font-weight: 600; letter-spacing: 0.04em; }
-  .lead { margin-top: 8px; color: #5c564c; font-size: 15px; font-family: "PingFang SC", sans-serif; }
-  .flow { margin-top: 36px; display: grid; grid-template-columns: 1fr 36px 1.15fr 36px 1fr; align-items: stretch; }
-  .col { display: flex; flex-direction: column; gap: 12px; }
-  .card {
-    background: #fffdf8;
-    border: 1px solid #ddd4c4;
-    border-radius: 12px;
-    padding: 16px 18px 14px;
-    min-height: 92px;
-  }
-  .card strong { display: block; font-size: 17px; margin-bottom: 6px; }
-  .card span { display: block; font-family: "PingFang SC", sans-serif; font-size: 13px; line-height: 1.55; color: #4a453c; }
-  .arrow {
-    display: flex; align-items: center; justify-content: center;
-    color: #8a8174; font-size: 22px;
-  }
-  .mid { background: #1c1915; color: #f4f1ea; border-color: #1c1915; }
-  .mid span { color: #d9d0c3; }
-  .foot {
-    margin-top: 28px;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-  .foot div {
-    border-top: 1px solid #ddd4c4;
-    padding-top: 12px;
+  .kicker {
     font-family: "PingFang SC", sans-serif;
-    font-size: 13px;
-    color: #3f3a33;
-    line-height: 1.5;
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    color: #8a8172;
   }
-  .foot b { display: block; font-family: "Songti SC", serif; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-  .note { margin-top: 18px; font-family: "PingFang SC", sans-serif; font-size: 12px; color: #8a8174; }
+  h1 {
+    margin-top: 14px;
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .rule { margin-top: 22px; height: 1px; background: #1a1814; width: 72px; }
+  .stage {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr 88px 1fr 88px 1fr;
+    align-items: center;
+  }
+  .group h2 {
+    font-family: "PingFang SC", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: #8a8172;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .item {
+    padding: 16px 0;
+    border-top: 1px solid #e4ddd0;
+  }
+  .item strong { display: block; font-size: 20px; font-weight: 600; letter-spacing: 0.04em; }
+  .item span {
+    display: block;
+    margin-top: 6px;
+    font-family: "PingFang SC", sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #5c564c;
+  }
+  .link {
+    text-align: center;
+    color: #1a1814;
+    font-family: "PingFang SC", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+  }
+  .link i {
+    display: block;
+    margin: 10px auto;
+    width: 48px;
+    height: 1px;
+    background: #1a1814;
+    font-style: normal;
+  }
+  .center {
+    background: #1a1814;
+    color: #f7f4ee;
+    min-height: 420px;
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .center .num {
+    font-family: "PingFang SC", sans-serif;
+    letter-spacing: 0.22em;
+    font-size: 12px;
+    color: #b7ae9f;
+  }
+  .center h2 { font-size: 32px; font-weight: 600; letter-spacing: 0.08em; margin-top: 18px; }
+  .center p {
+    font-family: "PingFang SC", sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #e7e1d6;
+  }
 </style>
 </head>
 <body>
-  <h1>字图、目录、标注，三条记录合在一处</h1>
-  <p class="lead">示意结构。年代来自写卷目录，代表字形在人工确认后写回字图库。</p>
-  <div class="flow">
-    <div class="col">
-      <div class="card"><strong>写卷目录</strong><span>西元纪年、题名、题记、馆藏。经写卷编号连到每一张字图。</span></div>
-      <div class="card"><strong>字图库</strong><span>图像编号、写卷编号、切图坐标、机器识别、佛典对字、人工校对、代表字形。</span></div>
-      <div class="card"><strong>标注库</strong><span>按账号保存残损、误入、字形分类、备注，以及字头任务。</span></div>
+  <div class="kicker">DATA MODEL</div>
+  <h1>三条记录，汇入同一界面</h1>
+  <div class="rule"></div>
+  <div class="stage">
+    <div class="group">
+      <h2>材料</h2>
+      <div class="item"><strong>写卷目录</strong><span>西元纪年、题名、题记、馆藏。以写卷编号连到字图。</span></div>
+      <div class="item"><strong>字图库</strong><span>图像编号、坐标、机器识别、佛典对字、人工校对、代表字形。</span></div>
+      <div class="item"><strong>标注库</strong><span>按账号记下残损、误入、字形分类、备注与字头任务。</span></div>
     </div>
-    <div class="arrow">→</div>
-    <div class="col">
-      <div class="card mid" style="flex:1"><strong>整理界面</strong><span>按字头检索。字图依写卷与年代排列。选定代表字形，打开辞书，或回到标出红框的原卷。</span></div>
+    <div class="link">汇入<i></i></div>
+    <div class="center">
+      <div>
+        <div class="num">WORKSPACE</div>
+        <h2>整理界面</h2>
+      </div>
+      <p>按字头检索。字图依写卷与年代排列。确认代表字形，对照辞书，或回到标有红框的原卷。</p>
     </div>
-    <div class="arrow">→</div>
-    <div class="col">
-      <div class="card"><strong>年代简表</strong><span>同一字头的代表字图，按写卷目录中的西元纪年排列。</span></div>
-      <div class="card"><strong>字表详编</strong><span>校对字段、单字图像，以及原卷上的红框定位。</span></div>
-      <div class="card"><strong>模型候选</strong><span>与人工结果分源显示。核对之后，才写入代表字形。</span></div>
+    <div class="link">生成<i></i></div>
+    <div class="group">
+      <h2>成果</h2>
+      <div class="item"><strong>年代简表</strong><span>代表字图按写卷目录中的西元纪年排列。</span></div>
+      <div class="item"><strong>字表详编</strong><span>校对字段、单字图像，以及原卷上的红框。</span></div>
+      <div class="item"><strong>分源候选</strong><span>人工确认与模型候选并列。核对之后写入代表字形。</span></div>
     </div>
   </div>
-  <div class="foot">
-    <div><b>检索</b>机器识别、佛典对字、人工校对，兼容字归入同一次查找。</div>
-    <div><b>协作</b>字头分到账号。各人的标注分开存放，都回到同一张字图。</div>
-    <div><b>原卷</b>用库中坐标在整页扫描图上框出该字。</div>
-    <div><b>导出</b>一个字头生成上编年代表和下编详表。</div>
-  </div>
-  <p class="note">图中条目为结构示意，不是某一卷的实测统计。</p>
 </body>
 </html>
