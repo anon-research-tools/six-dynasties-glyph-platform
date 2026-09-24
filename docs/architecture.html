@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<title>架构</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1280px; height: 720px;
+    background: #f4f1ea;
+    color: #1c1915;
+    font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+    padding: 48px 56px 40px;
+  }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: 0.04em; }
+  .lead { margin-top: 8px; color: #5c564c; font-size: 15px; font-family: "PingFang SC", sans-serif; }
+  .flow { margin-top: 36px; display: grid; grid-template-columns: 1fr 36px 1.15fr 36px 1fr; align-items: stretch; }
+  .col { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: #fffdf8;
+    border: 1px solid #ddd4c4;
+    border-radius: 12px;
+    padding: 16px 18px 14px;
+    min-height: 92px;
+  }
+  .card strong { display: block; font-size: 17px; margin-bottom: 6px; }
+  .card span { display: block; font-family: "PingFang SC", sans-serif; font-size: 13px; line-height: 1.55; color: #4a453c; }
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: #8a8174; font-size: 22px;
+  }
+  .mid { background: #1c1915; color: #f4f1ea; border-color: #1c1915; }
+  .mid span { color: #d9d0c3; }
+  .foot {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .foot div {
+    border-top: 1px solid #ddd4c4;
+    padding-top: 12px;
+    font-family: "PingFang SC", sans-serif;
+    font-size: 13px;
+    color: #3f3a33;
+    line-height: 1.5;
+  }
+  .foot b { display: block; font-family: "Songti SC", serif; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .note { margin-top: 18px; font-family: "PingFang SC", sans-serif; font-size: 12px; color: #8a8174; }
+</style>
+</head>
+<body>
+  <h1>字图、目录、标注，三条记录合在一处</h1>
+  <p class="lead">示意结构。年代来自写卷目录，代表字形在人工确认后写回字图库。</p>
+  <div class="flow">
+    <div class="col">
+      <div class="card"><strong>写卷目录</strong><span>西元纪年、题名、题记、馆藏。经写卷编号连到每一张字图。</span></div>
+      <div class="card"><strong>字图库</strong><span>图像编号、写卷编号、切图坐标、机器识别、佛典对字、人工校对、代表字形。</span></div>
+      <div class="card"><strong>标注库</strong><span>按账号保存残损、误入、字形分类、备注，以及字头任务。</span></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="col">
+      <div class="card mid" style="flex:1"><strong>整理界面</strong><span>按字头检索。字图依写卷与年代排列。选定代表字形，打开辞书，或回到标出红框的原卷。</span></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="col">
+      <div class="card"><strong>年代简表</strong><span>同一字头的代表字图，按写卷目录中的西元纪年排列。</span></div>
+      <div class="card"><strong>字表详编</strong><span>校对字段、单字图像，以及原卷上的红框定位。</span></div>
+      <div class="card"><strong>模型候选</strong><span>与人工结果分源显示。核对之后，才写入代表字形。</span></div>
+    </div>
+  </div>
+  <div class="foot">
+    <div><b>检索</b>机器识别、佛典对字、人工校对，兼容字归入同一次查找。</div>
+    <div><b>协作</b>字头分到账号。各人的标注分开存放，都回到同一张字图。</div>
+    <div><b>原卷</b>用库中坐标在整页扫描图上框出该字。</div>
+    <div><b>导出</b>一个字头生成上编年代表和下编详表。</div>
+  </div>
+  <p class="note">图中条目为结构示意，不是某一卷的实测统计。</p>
+</body>
+</html>

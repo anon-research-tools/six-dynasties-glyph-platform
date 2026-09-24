@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<title>界面示意</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1280px; height: 800px;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+    padding: 22px 28px 18px;
+  }
+  .top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  h1 { font-family: "Songti SC", serif; font-size: 22px; font-weight: 600; }
+  .tag { font-size: 12px; color: #86868b; letter-spacing: 0.08em; }
+  .bar {
+    background: #fff; border: 1px solid #e4e4e7; border-radius: 12px;
+    padding: 12px 14px; display: flex; gap: 10px; align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .q {
+    width: 220px; border: 1px solid #d2d2d7; border-radius: 8px;
+    padding: 8px 12px; font-size: 18px; font-family: "Songti SC", serif;
+  }
+  .btn { background: #0071e3; color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 13px; }
+  .ghost { border: 1px solid #d2d2d7; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #515154; background: #fff; }
+  .meta { margin-left: auto; font-size: 12px; color: #86868b; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 14px; background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden; }
+  th { text-align: left; font-size: 12px; color: #86868b; font-weight: 500; padding: 10px 12px; background: #fbfbfd; border-bottom: 1px solid #e4e4e7; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f0f0f2; font-size: 13px; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .glyph {
+    width: 54px; height: 54px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Songti SC", serif; font-size: 32px; background: #f3efe6; border: 1px solid #e4dccb;
+  }
+  .y { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+  .ok { background: #e8f7ee; color: #17663a; }
+  .ai { background: #eef4ff; color: #1d4f91; }
+  .bad { background: rgba(220,53,69,.12); color: #9b1c2c; box-shadow: inset 3px 0 0 #dc3545; }
+  .mis { background: rgba(253,126,20,.14); color: #9a4d00; box-shadow: inset 3px 0 0 #fd7e14; }
+  .num { background: rgba(23,162,184,.12); color: #0f6674; box-shadow: inset 3px 0 0 #17a2b8; }
+  .split { margin-top: 14px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 12px; }
+  .panel { background: #fff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 12px 14px; }
+  .panel h2 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .scroll {
+    height: 168px; background: #efeae0; border-radius: 8px; position: relative;
+    display: flex; align-items: center; justify-content: center; color: #8a8174; font-size: 13px;
+  }
+  .box { position: absolute; left: 46%; top: 38%; width: 28px; height: 28px; border: 2px solid #dc3545; }
+  .cols { display: flex; gap: 16px; font-size: 13px; line-height: 1.7; color: #3f3a33; }
+  .cols b { color: #1d1d1f; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <h1>六朝写经异体字编年平台</h1>
+    <div class="tag">界面示意 · 样例字头「魔」</div>
+  </div>
+  <div class="bar">
+    <div class="q">魔</div>
+    <div class="btn">检索</div>
+    <div class="ghost">高级检索</div>
+    <div class="ghost">导出 Word</div>
+    <div class="ghost">原卷</div>
+    <div class="meta">人工确认 与 模型候选 分源显示</div>
+  </div>
+  <table>
+    <thead>
+      <tr><th>字图</th><th>年代</th><th>写卷</th><th>佛典对字</th><th>人工校对</th><th>来源</th><th>标注</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="glyph">魔</div></td>
+        <td class="y">393</td><td>上博 01 · 维摩诘经</td><td>魔</td><td>魔</td>
+        <td><span class="pill ok">人工</span></td><td>代表字形</td>
+      </tr>
+      <tr>
+        <td><div class="glyph">魔</div></td>
+        <td class="y">403</td><td>S.6916</td><td>魔</td><td>魔</td>
+        <td><span class="pill ai">模型候选</span></td><td><span class="pill num">字形 2</span></td>
+      </tr>
+      <tr>
+        <td><div class="glyph" style="opacity:.55">魔</div></td>
+        <td class="y">418</td><td>余 630</td><td>魔</td><td>魔</td>
+        <td><span class="pill ok">人工</span></td><td><span class="pill bad">残损</span></td>
+      </tr>
+      <tr>
+        <td><div class="glyph">磨</div></td>
+        <td class="y">457</td><td>中村 009</td><td>魔</td><td>磨</td>
+        <td><span class="pill ai">模型候选</span></td><td><span class="pill mis">误入</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="split">
+    <div class="panel">
+      <h2>原卷回溯 · 393 年 · 红框为库中坐标</h2>
+      <div class="scroll"><div class="box"></div><div style="position:absolute;left:16px;bottom:10px;">整页扫描图示意</div></div>
+    </div>
+    <div class="panel">
+      <h2>这一条字图记录里有什么</h2>
+      <div class="cols">
+        <div><b>字图库</b><br>编号、写卷、坐标<br>机器识别、佛典对字<br>人工校对、代表字形</div>
+        <div><b>写卷目录</b><br>393 年<br>题名、题记、馆藏</div>
+        <div><b>标注库</b><br>当前账号的残损、<br>误入、分类与备注</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
