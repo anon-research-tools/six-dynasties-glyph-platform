@@ -1,10 +1,9 @@
 """WSGI 入口：供 gunicorn 使用。
 
-主應用文件名包含中文和空格，gunicorn 無法直接 import，所以用 importlib
-動態加載。同時負責資料庫和圖片索引的啟動初始化（主文件的 __main__ 塊
-在 gunicorn 模式下不會執行）。
+gunicorn 以 wsgi:app 加载本文件。本文件再载入 app.py，并完成数据库初始化。
+app.py 的 __main__ 块在 gunicorn 模式下不会执行。
 
-啟動命令：
+启动命令：
     gunicorn -c gunicorn_config.py wsgi:app
 """
 
@@ -14,7 +13,7 @@ import importlib.util
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.resolve()
-MAIN_FILE = BASE_DIR / "「text」4 全部字圖的主页2025年06月25日09.py"
+MAIN_FILE = BASE_DIR / "app.py"
 
 if not MAIN_FILE.exists():
     raise FileNotFoundError(f"找不到主應用文件: {MAIN_FILE}")

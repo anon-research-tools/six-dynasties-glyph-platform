@@ -131,7 +131,7 @@ SINGLE_CANDIDATE_CLEANER_DB_PATH = os.path.join(_PROJECT_DIR, 'single_candidate_
 SINGLE_CANDIDATE_CLEANER_BACKUP_DIR = os.path.join(_PROJECT_DIR, 'backups', 'single_candidate_cleaner')
 SINGLE_CANDIDATE_THUMB_DIR = os.path.join(_PROJECT_DIR, 'cache', 'single_candidate_thumbs_v1')
 
-HTML_TEMPLATE_PATH = _PROJECT_DIR
+HTML_TEMPLATE_PATH = os.path.join(_PROJECT_DIR, "templates")
 LOCAL_STATIC_DIR = os.path.join(_PROJECT_DIR, 'static')
 
 # 切割後的字圖目錄（查詢頁顯示用）
@@ -150,7 +150,7 @@ DEFAULT_DB_PATH = os.path.join(_DB_DIR, 'default_keyword.db')
 INDEX_CACHE_FILE = os.path.join(_DB_DIR, 'image_index.pkl')
 VARIANT_TABLE_PATH = os.path.join(_PROJECT_DIR, '字典', 'variant.txt')
 CHAR_DATA_CACHE_FILE = os.path.join(_DB_DIR, 'char_data.pkl')
-HTML_FILE = "「text」7. [全部]六朝寫經異體字典架構2025年06月25日09.html"
+HTML_FILE = "workspace.html"
 USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'users.json')
 
 # ======== 學生管理配置（自動生成 student_01 ~ student_50） ========
@@ -4339,7 +4339,7 @@ def admin_defaults_sources():
     ))
 
     return render_template(
-        'admin_default_sources.html',
+        'admin_sources.html',
         rows=rows,
         keyword_filter=keyword_filter,
         source_filter=source_filter,
@@ -4392,7 +4392,7 @@ def admin_ai_coverage_audit():
         'summary': {},
         'status_meta': AI_AUDIT_STATUS_META,
     }
-    return render_template('admin_ai_coverage_audit.html', keyword=keyword, audit=audit)
+    return render_template('admin_coverage.html', keyword=keyword, audit=audit)
 
 
 @app.route('/admin/ai_coverage_audit.csv')
@@ -4503,7 +4503,7 @@ def admin_single_candidate_cleaner():
     overall_kept = max(overall_total - overall_discarded, 0)
 
     return render_template(
-        'admin_single_candidate_cleaner.html',
+        'admin_candidate_review.html',
         keyword_stats=keyword_stats,
         keyword_order=keyword_order,
         initial_index=selected_index,
@@ -6296,7 +6296,7 @@ def cancel_remark():
 from database import init_database, get_student_annotations, add_student_annotation, delete_student_annotation, record_file_size, check_file_size_anomaly, export_student_data_to_csv
 
 # 导入工具函数
-from utils import get_student_annotation_by_char_id, get_all_student_annotations_dict
+from annotation_lookup import get_student_annotation_by_char_id, get_all_student_annotations_dict
 
 # 注：資料庫初始化由入口負責（wsgi.py 或 __main__ 塊），不在模塊加載時執行，
 # 避免 import 時產生副作用、雙重初始化。
