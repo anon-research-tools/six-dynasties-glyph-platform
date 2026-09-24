@@ -2,11 +2,16 @@
 
 写经单字、写卷目录与协作标注，收在同一条整理流程里。按字头检索，确认代表字形，回到原卷上的位置，并按年代导出字表。
 
-<p align="center">
-  <img src="docs/workspace.png" alt="整理界面示意：字头魔的检索、标注与原卷回溯" width="920">
-</p>
-
-<p align="center"><sub>整理界面。字头「魔」及表中年代、写卷、标注均为示意。</sub></p>
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#f7f4ee', 'primaryTextColor': '#1a1814', 'primaryBorderColor': '#2c2824', 'lineColor': '#6e675f', 'fontFamily': 'Songti SC, Source Han Serif SC, serif', 'fontSize': '16px'}}}%%
+flowchart LR
+  catalog[写卷目录] --> desk[整理界面]
+  images[字图与原卷] --> desk
+  marks[标注与任务] --> desk
+  desk --> chosen[代表字形]
+  desk --> locus[原卷定位]
+  desk --> table[年代字表]
+```
 
 ## 功能
 
@@ -17,12 +22,6 @@
 - **按卷回看。** 从目录进入某一卷、某一个字，查看切图、题名与题记。
 
 同一表结构接入自备字图、目录与账号后，上述流程即可运行。
-
-<p align="center">
-  <img src="docs/architecture.png" alt="写卷目录、字图库与标注库汇入整理界面" width="920">
-</p>
-
-<p align="center"><sub>写卷目录提供年代，字图库保存字形与坐标，标注库记下整理结果。</sub></p>
 
 ## 开始
 
