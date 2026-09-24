@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單候選補選 - 管理後台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", Arial, sans-serif;
+            background: #f2f4f8;
+            color: #1f2937;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+        .header h1 { margin: 0; font-size: 1.2em; }
+        .header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .header a {
+            text-decoration: none;
+            color: #fff;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .content { padding: 18px 24px 28px; }
+        .toolbar {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            padding: 14px;
+            margin-bottom: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .toolbar input, .toolbar select {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 14px;
+        }
+        .toolbar input[name="q"] { width: 120px; }
+        .toolbar input[name="manuscript"] { width: 180px; }
+        .toolbar button, .pager a, .tool-link {
+            border: 1px solid #1f2937;
+            background: #1f2937;
+            color: #fff;
+            border-radius: 6px;
+            padding: 7px 12px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .tool-link.secondary, .pager a {
+            background: #fff;
+            color: #1f2937;
+            border-color: #d1d5db;
+        }
+        .summary {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: #475569;
+            font-size: 14px;
+        }
+        .summary strong { color: #111827; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+        }
+        .candidate {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05);
+            display: grid;
+            grid-template-columns: 104px 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        .candidate.selected {
+            opacity: .58;
+            background: #f8fafc;
+        }
+        .thumb-wrap {
+            min-height: 104px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+        .thumb-wrap img {
+            max-width: 100%;
+            max-height: 130px;
+            display: block;
+        }
+        .meta h3 {
+            margin: 0 0 6px;
+            font-size: 16px;
+            line-height: 1.3;
+        }
+        .meta .line {
+            margin: 3px 0;
+            color: #475569;
+            font-size: 13px;
+            word-break: break-all;
+        }
+        .tag {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 2px 8px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .select-btn {
+            margin-top: 9px;
+            width: 100%;
+            border: 1px solid #16a34a;
+            background: #16a34a;
+            color: #fff;
+            border-radius: 7px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .select-btn:disabled {
+            cursor: default;
+            background: #94a3b8;
+            border-color: #94a3b8;
+        }
+        .small-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .small-actions a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .pager {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+        .empty {
+            background: #fff;
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            color: #64748b;
+        }
+        @media (max-width: 760px) {
+            .header { align-items: flex-start; flex-direction: column; }
+            .content { padding: 14px; }
+            .candidate { grid-template-columns: 92px 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>單候選補選</h1>
+        <div class="actions">
+            <a href="/admin">管理後台</a>
+            <a href="/admin/defaults_sources">來源字頭總覽</a>
+            <a href="/admin/ai_coverage_audit">AI覆蓋審計</a>
+            <a href="/defaults">篩選字圖</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <form class="toolbar" method="GET">
+            <input type="text" name="q" value="{{ pager.keyword }}" placeholder="字頭">
+            <input type="text" name="manuscript" value="{{ pager.manuscript }}" placeholder="寫卷編號">
+            <select name="source">
+                {% for value, label in source_options %}
+                <option value="{{ value }}" {% if pager.source_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <select name="per_page">
+                {% for n in [50, 100, 200, 500] %}
+                <option value="{{ n }}" {% if pager.per_page == n %}selected{% endif %}>每頁 {{ n }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">查詢</button>
+            <a class="tool-link secondary" href="/admin/single_candidates">清空篩選</a>
+        </form>
+
+        <div class="summary">
+            <div>共 <strong>{{ pager.total_count }}</strong> 個未覆蓋的單候選；當前第 <strong>{{ pager.page }}</strong> / {{ pager.total_pages }} 頁。</div>
+            <div>口徑：舊 Gemini 隊列的 `n=1`，且無人工選定、無正式 Pro/Fresh 記錄；已排除單字符符號噪聲。</div>
+        </div>
+
+        {% if rows %}
+        <div class="grid">
+            {% for row in rows %}
+            <article class="candidate" data-char-id="{{ row.char_id }}" data-keyword="{{ row.candidate_keyword }}">
+                <div class="thumb-wrap">
+                    {% if row.img_url %}
+                    <img src="{{ row.img_url|img_url }}" alt="字圖 {{ row.candidate_keyword }}" loading="lazy">
+                    {% else %}
+                    <span>無圖</span>
+                    {% endif %}
+                </div>
+                <div class="meta">
+                    <h3>{{ row.candidate_keyword }} <span class="tag">{{ row.source_label }}</span></h3>
+                    <div class="line"><strong>{{ row.other_info_code }}</strong>　{{ row.other_info }}</div>
+                    <div class="line">char_id: {{ row.char_id }}</div>
+                    <div class="line">人工: {{ row.txt or '-' }}　CBETA: {{ row.cmp_txt or '-' }}</div>
+                    <div class="line">字 OCR: {{ row.ocr_txt or '-' }}　列 OCR: {{ row.ocr_col or '-' }}</div>
+                    <button type="button"
+                            class="select-btn"
+                            data-char-id="{{ row.char_id }}"
+                            data-keyword="{{ row.candidate_keyword }}"
+                            data-manuscript="{{ row.other_info_code }}"
+                            onclick="selectCandidate(this)">
+                        選定
+                    </button>
+                    <div class="small-actions">
+                        <a href="/defaults?q={{ row.candidate_keyword|urlencode }}&source=global_all" target="_blank" rel="noopener noreferrer">整庫查看</a>
+                        <a href="/search?q={{ row.candidate_keyword|urlencode }}&per_page=1000" target="_blank" rel="noopener noreferrer">搜索頁面</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">沒有符合條件的單候選。</div>
+        {% endif %}
+
+        <div class="pager">
+            {% set qs = 'q=' ~ pager.keyword|urlencode ~ '&manuscript=' ~ pager.manuscript|urlencode ~ '&source=' ~ pager.source_filter|urlencode ~ '&per_page=' ~ pager.per_page %}
+            {% if pager.page > 1 %}
+            <a href="/admin/single_candidates?{{ qs }}&page={{ pager.page - 1 }}">上一頁</a>
+            {% endif %}
+            <span>第 {{ pager.page }} / {{ pager.total_pages }} 頁</span>
+            {% if pager.page < pager.total_pages %}
+            <a href="/admin/single_candidates?{{ qs }}&page={{ pager.page + 1 }}">下一頁</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        async function selectCandidate(button) {
+            const card = button.closest('.candidate');
+            const keyword = button.dataset.keyword;
+            const charId = button.dataset.charId;
+            const manuscript = button.dataset.manuscript;
+            button.disabled = true;
+            button.textContent = '寫入中...';
+            try {
+                const resp = await fetch('/save_default_keyword', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        char_ids: [charId],
+                        manuscript_ids: [manuscript]
+                    })
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || '寫入失敗');
+                }
+                card.classList.add('selected');
+                button.textContent = '已選定';
+            } catch (err) {
+                button.disabled = false;
+                button.textContent = '選定';
+                alert(err.message || '寫入失敗');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>登入 · 六朝寫經異體字編年字典</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Noto Serif TC", sans-serif;
+            background:
+                radial-gradient(1000px 600px at 18% 15%, rgba(64, 90, 160, .25) 0, transparent 55%),
+                radial-gradient(800px 500px at 90% 85%, rgba(170, 100, 70, .18) 0, transparent 55%),
+                radial-gradient(500px 300px at 50% 50%, rgba(80, 120, 110, .12) 0, transparent 70%),
+                #0b0b10;
+            color: #e6e6ea;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 噪点纹理 */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.3'/></svg>");
+            opacity: .07;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 背景大字（水印般） */
+        body::after {
+            content: "六朝寫經";
+            position: fixed;
+            right: -40px;
+            bottom: -30px;
+            font-family: "Ma Shan Zheng", "Noto Serif TC", serif;
+            font-size: 320px;
+            color: rgba(255, 255, 255, .025);
+            line-height: .9;
+            letter-spacing: .1em;
+            pointer-events: none;
+            z-index: 1;
+            white-space: nowrap;
+        }
+
+        .login-outer {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .brand {
+            position: absolute;
+            top: 40px; left: 48px;
+            font-family: "Noto Serif TC", serif;
+            color: rgba(255, 255, 255, .6);
+            font-size: 13px;
+            letter-spacing: .25em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand::before {
+            content: "";
+            width: 22px;
+            height: 1px;
+            background: rgba(255, 255, 255, .35);
+        }
+
+        .login-container {
+            width: 420px;
+            max-width: 94vw;
+            background: rgba(255, 255, 255, .05);
+            backdrop-filter: blur(28px) saturate(1.5);
+            -webkit-backdrop-filter: blur(28px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 22px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .06);
+            padding: 48px 44px 42px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kicker {
+            align-self: center;
+            padding: 5px 16px;
+            border-radius: 999px;
+            background: rgba(170, 200, 255, .12);
+            color: #a8c8ff;
+            font-size: 11.5px;
+            letter-spacing: .32em;
+            font-weight: 500;
+            font-family: "Noto Serif TC", serif;
+            margin-bottom: 24px;
+            border: 1px solid rgba(170, 200, 255, .15);
+        }
+
+        .main-title {
+            font-family: "Noto Serif TC", "PingFang TC", "Songti SC", serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: .04em;
+            margin-bottom: 6px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .sub-title {
+            font-family: "Noto Serif TC", serif;
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, .45);
+            font-weight: 400;
+            margin-bottom: 34px;
+            text-align: center;
+            letter-spacing: .3em;
+        }
+
+        .accent-bar {
+            display: block;
+            width: 36px; height: 2px;
+            margin: 0 auto 30px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa 55%, #f0a0c0);
+            box-shadow: 0 0 16px rgba(120, 160, 255, .35);
+        }
+
+        .login-container label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, .55);
+            font-size: 11.5px;
+            font-weight: 500;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            font-family: "Noto Serif TC", serif;
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, .04);
+            color: #fff;
+            letter-spacing: .02em;
+            font-family: inherit;
+            transition: all .2s ease;
+        }
+
+        .login-container input[type="text"]::placeholder,
+        .login-container input[type="password"]::placeholder {
+            color: rgba(255, 255, 255, .25);
+        }
+
+        .login-container input[type="text"]:focus,
+        .login-container input[type="password"]:focus {
+            border-color: rgba(168, 200, 255, .5);
+            outline: none;
+            background: rgba(255, 255, 255, .08);
+            box-shadow: 0 0 0 4px rgba(168, 200, 255, .08);
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 14px 0;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa 60%, #f0a0c0);
+            color: #fff;
+            border: 0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            letter-spacing: .28em;
+            font-family: inherit;
+            transition: all .2s ease;
+            box-shadow: 0 8px 24px rgba(120, 160, 255, .25);
+        }
+
+        .login-container button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 32px rgba(120, 160, 255, .35);
+            filter: brightness(1.08);
+        }
+
+        .login-container button:active {
+            transform: translateY(0);
+            filter: brightness(.95);
+        }
+
+        .error {
+            color: #ffb4b4;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 13px;
+            padding: 10px 12px;
+            background: rgba(255, 90, 90, .1);
+            border: 1px solid rgba(255, 90, 90, .2);
+            border-radius: 10px;
+            min-height: 0;
+            display: none;
+        }
+        .error.visible { display: block; }
+
+        .footer-note {
+            text-align: center;
+            color: rgba(255, 255, 255, .3);
+            font-size: 11px;
+            margin-top: 28px;
+            letter-spacing: .24em;
+            font-family: "Noto Serif TC", serif;
+        }
+
+        @media (max-width: 520px) {
+            .brand { top: 20px; left: 20px; font-size: 11px; }
+            .login-container { padding: 36px 28px 30px; border-radius: 18px; }
+            .main-title { font-size: 26px; }
+            body::after { font-size: 220px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brand">六朝寫經異體字典</div>
+    <div class="login-outer">
+        <div class="login-container">
+            <div class="kicker">校勘系統</div>
+            <div class="main-title">六朝寫經異體字編年字典</div>
+            <div class="sub-title">敦煌 · 六朝 · 寫經殘卷</div>
+            <span class="accent-bar"></span>
+
+            <div id="error-msg" class="error"></div>
+
+            <form id="login-form">
+                <label for="username">帳號</label>
+                <input type="text" id="username" name="username" autocomplete="username" placeholder="scholar_xx" required>
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••" required>
+                <button type="submit">登　　錄</button>
+            </form>
+
+            <div class="footer-note">異體字編年 · 線上校勘</div>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errBox = document.getElementById('error-msg');
+        errBox.classList.remove('visible');
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/dashboard';
+            } else {
+                errBox.textContent = data.error || '登入失敗';
+                errBox.classList.add('visible');
+            }
+        })
+        .catch(() => {
+            errBox.textContent = '伺服器錯誤，請稍後再試';
+            errBox.classList.add('visible');
+        });
+    });
+    </script>
+</body>
+</html>

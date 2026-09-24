@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 覆蓋審計 - 管理後台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", Arial, sans-serif;
+            background: #f2f4f8;
+            color: #1f2937;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; font-size: 1.2em; }
+        .header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .header a, .header button {
+            text-decoration: none;
+            color: #fff;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .content { padding: 18px 24px 28px; }
+        .toolbar {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            padding: 14px;
+            margin-bottom: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .toolbar input {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 14px;
+            width: 180px;
+        }
+        .toolbar button, .toolbar a {
+            border: 1px solid #1f2937;
+            background: #1f2937;
+            color: #fff;
+            border-radius: 6px;
+            padding: 7px 12px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .toolbar a.secondary {
+            background: #fff;
+            color: #1f2937;
+            border-color: #d1d5db;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .metric {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        }
+        .metric .label { color: #64748b; font-size: 12px; }
+        .metric .value { margin-top: 3px; font-size: 22px; font-weight: 700; }
+        .metric.danger .value { color: #dc2626; }
+        .metric.warn .value { color: #d97706; }
+        .metric.info .value { color: #2563eb; }
+        .metric.ok .value { color: #16a34a; }
+        .variant-note {
+            margin: 0 0 14px;
+            padding: 10px 12px;
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+        .variant-note code {
+            display: inline-block;
+            margin-left: 4px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: #ffedd5;
+            border: 1px solid #fdba74;
+            font-family: inherit;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        }
+        th, td {
+            border-bottom: 1px solid #edf0f5;
+            padding: 10px 11px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+        th {
+            background: #f8fafc;
+            color: #4b5563;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        tr:hover { background: #f9fbfd; }
+        .status {
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+            border-radius: 999px;
+            padding: 3px 9px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .status.danger { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .status.warn { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+        .status.info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .status.ok { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .status.muted { background: #f8fafc; color: #475569; border: 1px solid #dbe4f0; }
+        .num { font-weight: 700; }
+        .muted { color: #64748b; }
+        .samples {
+            color: #475569;
+            max-width: 220px;
+            word-break: break-all;
+            line-height: 1.45;
+        }
+        .ai-detail {
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .row-action {
+            max-width: 260px;
+            color: #374151;
+            line-height: 1.45;
+        }
+        .empty {
+            background: #fff;
+            border-radius: 10px;
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            color: #64748b;
+        }
+        @media (max-width: 900px) {
+            .header { align-items: flex-start; flex-direction: column; gap: 10px; }
+            .content { padding: 14px; }
+            table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AI 覆蓋審計</h1>
+        <div class="actions">
+            <a href="/admin">管理後台</a>
+            <a href="/admin/defaults_sources">來源字頭總覽</a>
+            <a href="/defaults">篩選字圖</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <form class="toolbar" method="GET">
+            <input type="text" name="q" value="{{ keyword }}" placeholder="輸入字頭">
+            <button type="submit">查詢</button>
+            {% if keyword %}
+            <a class="secondary" href="/defaults?q={{ keyword|urlencode }}&source=global_all" target="_blank" rel="noopener noreferrer">打開整庫查詢</a>
+            <a class="secondary" href="/admin/ai_coverage_audit.csv?q={{ keyword|urlencode }}">導出CSV</a>
+            {% endif %}
+        </form>
+
+        {% if keyword and audit.variants %}
+        <div class="variant-note">
+            當前字頭 <b>{{ keyword }}</b> 合併查詢：
+            {% for variant in audit.variants %}
+            <code>{{ variant }}</code>
+            {% endfor %}
+            <span>。強命中不含 alternatives；僅弱命中主要來自 alternatives。</span>
+        </div>
+        {% endif %}
+
+        {% if keyword %}
+        <div class="summary">
+            <div class="metric">
+                <div class="label">涉及寫卷</div>
+                <div class="value">{{ audit.summary.total_manuscripts or 0 }}</div>
+            </div>
+            <div class="metric">
+                <div class="label">整庫命中行</div>
+                <div class="value">{{ audit.summary.total_rows or 0 }}</div>
+            </div>
+            <div class="metric">
+                <div class="label">有強命中的寫卷</div>
+                <div class="value">{{ audit.summary.strong_manuscripts or 0 }}</div>
+            </div>
+            <div class="metric danger">
+                <div class="label">強命中無AI</div>
+                <div class="value">{{ audit.summary.missing_ai or 0 }}</div>
+            </div>
+            <div class="metric warn">
+                <div class="label">AI空選/無候選</div>
+                <div class="value">{{ audit.summary.ai_empty or 0 }}</div>
+            </div>
+            <div class="metric info">
+                <div class="label">有AI候選未人工</div>
+                <div class="value">{{ audit.summary.ai_candidate or 0 }}</div>
+            </div>
+            <div class="metric ok">
+                <div class="label">已有人工</div>
+                <div class="value">{{ audit.summary.manual_done or 0 }}</div>
+            </div>
+        </div>
+
+        {% if audit.rows %}
+        <table>
+            <thead>
+                <tr>
+                    <th>寫卷</th>
+                    <th>狀態</th>
+                    <th>整庫命中</th>
+                    <th>強命中</th>
+                    <th>人工/CBETA</th>
+                    <th>OCR</th>
+                    <th>僅弱命中</th>
+                    <th>人工選定</th>
+                    <th>Gemini Pro</th>
+                    <th>Gemini Fresh</th>
+                    <th>樣例</th>
+                    <th>處理建議</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in audit.rows %}
+                <tr>
+                    <td><strong>{{ row.manuscript }}</strong></td>
+                    <td>
+                        <span class="status {{ row.status['class'] }}">{{ row.status.label }}</span>
+                    </td>
+                    <td class="num">{{ row.total_rows }}</td>
+                    <td class="num">{{ row.strong_rows }}</td>
+                    <td>{{ row.auth_rows }}</td>
+                    <td>{{ row.ocr_rows }}</td>
+                    <td>{{ row.weak_rows }}</td>
+                    <td>
+                        <span class="num">{{ row.manual_count }}</span>
+                        {% if row.other_default_count %}
+                        <div class="ai-detail">其他默認 {{ row.other_default_count }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ row.gemini_pro_label }}
+                        {% if row.gemini_pro.keywords %}
+                        <div class="ai-detail">字形 {{ row.gemini_pro.keywords|join(' ') }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ row.gemini_fresh_label }}
+                        {% if row.gemini_fresh.keywords %}
+                        <div class="ai-detail">字形 {{ row.gemini_fresh.keywords|join(' ') }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="samples">
+                        {% if row.sample_char_ids %}
+                        {{ row.sample_char_ids|join(' ') }}
+                        {% else %}
+                        <span class="muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="row-action">{{ row.status.action }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">沒有查到整庫命中，也沒有查到 Gemini 記錄。</div>
+        {% endif %}
+        {% else %}
+        <div class="empty">輸入一個字頭後，可以查看各寫卷是否已有人工選定、Gemini 記錄和整庫命中。</div>
+        {% endif %}
+    </div>
+</body>
+</html>

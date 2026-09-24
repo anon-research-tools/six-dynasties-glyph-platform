@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理後台 - 六朝寫經異體字編年字典</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', Arial, sans-serif; background: #f0f2f5; color: #333; }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff; padding: 18px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 1.3em; letter-spacing: 1px; }
+        .header-right { display: flex; gap: 12px; }
+        .header-right a, .header-right button {
+            background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;
+            text-decoration: none; transition: background 0.2s;
+        }
+        .header-right a:hover, .header-right button:hover { background: rgba(255,255,255,0.2); }
+
+        .global-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px; padding: 20px 30px;
+        }
+        .stat-card {
+            background: #fff; border-radius: 10px; padding: 16px 18px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .stat-card .label { font-size: 0.85em; color: #888; }
+        .stat-card .value { font-size: 1.6em; font-weight: 700; margin-top: 4px; }
+        .stat-card .value.blue { color: #1976D2; }
+        .stat-card .value.green { color: #43a047; }
+        .stat-card .value.orange { color: #f57c00; }
+        .stat-card .value.red { color: #d32f2f; }
+
+        .content { padding: 0 30px 30px; }
+
+        .filter-bar {
+            display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+        }
+        .filter-bar select, .filter-bar input {
+            padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9em;
+        }
+
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        th { background: #f8f9fa; color: #555; font-weight: 600; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        tr:hover { background: #fafbff; }
+        tr.disabled { opacity: 0.5; }
+
+        .progress-mini { display: flex; align-items: center; gap: 8px; }
+        .progress-mini .bar { flex: 1; height: 6px; background: #e8e8e8; border-radius: 3px; min-width: 60px; }
+        .progress-mini .fill { height: 100%; border-radius: 3px; background: #43a047; }
+        .progress-mini .pct { font-size: 0.85em; color: #666; white-space: nowrap; }
+
+        .badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 0.8em; font-weight: 500;
+        }
+        .badge.on { background: #e8f5e9; color: #2e7d32; }
+        .badge.off { background: #fbe9e7; color: #c62828; }
+        .badge.active { background: #e3f2fd; color: #1565c0; }
+        .badge.inactive { background: #f5f5f5; color: #999; }
+
+        .time-ago { font-size: 0.85em; color: #888; }
+
+        .btn-sm {
+            padding: 4px 10px; border: 1px solid #ddd; border-radius: 4px;
+            background: #fff; cursor: pointer; font-size: 0.8em; transition: all 0.15s;
+        }
+        .btn-sm:hover { background: #f5f5f5; }
+        .btn-sm.danger { color: #d32f2f; border-color: #ffcdd2; }
+        .btn-sm.danger:hover { background: #ffebee; }
+        .btn-sm.success { color: #2e7d32; border-color: #c8e6c9; }
+        .btn-sm.success:hover { background: #e8f5e9; }
+
+        .note-input {
+            width: 100%; padding: 4px 8px; border: 1px solid transparent; border-radius: 4px;
+            font-size: 0.85em; background: transparent; transition: all 0.15s;
+        }
+        .note-input:hover { border-color: #ddd; background: #fff; }
+        .note-input:focus { border-color: #1976D2; background: #fff; outline: none; }
+
+        .detail-row { display: none; }
+        .detail-row.show { display: table-row; }
+        .detail-cell { padding: 12px 20px; background: #fafbfc; }
+        .activity-list { max-height: 200px; overflow-y: auto; font-size: 0.85em; }
+        .activity-item { padding: 4px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 12px; }
+        .activity-item .time { color: #999; white-space: nowrap; min-width: 140px; }
+        .activity-item .action { color: #555; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .global-stats { grid-template-columns: repeat(2, 1fr); padding: 14px 16px; }
+            .content { padding: 0 16px 16px; }
+            table { font-size: 0.85em; }
+            th, td { padding: 8px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>管理後台</h1>
+        <div class="header-right">
+            <a href="/">搜索頁面</a>
+            <a href="/defaults">只看篩選字圖</a>
+            <a href="/admin/defaults_sources">來源字頭總覽</a>
+            <a href="/admin/ai_coverage_audit">AI覆蓋審計</a>
+            <a href="/manuscripts">寫卷瀏覽</a>
+            <a href="/admin/manuscripts">寫卷編號查詢</a>
+            <button onclick="fetch('/logout').then(()=>location.href='/login')">登出</button>
+        </div>
+    </div>
+
+
+    <div class="content">
+        <!-- 創建新賬號 -->
+        <div style="background:#fff;border-radius:10px;padding:18px 22px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <strong style="font-size:1.05em;">創建新賬號</strong>
+                <span style="color:#888;font-size:0.9em;">scholar_</span>
+                <input id="newAccountNum" type="text" placeholder="編號（如 01）" value="{{ next_scholar_num }}"
+                       style="width:100px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;">
+                <input id="newAccountName" type="text" placeholder="顯示名（如 張三）"
+                       style="width:120px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;">
+                <input id="newAccountPwd" type="text" placeholder="密碼"
+                       style="width:100px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;">
+                <button onclick="createAccount()" style="background:#43a047;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;">創建</button>
+                <button onclick="generatePassword()" class="btn-sm" style="padding:6px 14px;">隨機密碼</button>
+            </div>
+        </div>
+
+        <!-- 頂部快捷連結 -->
+        <div style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="/admin/demo_stats" style="padding:6px 14px;background:#f59e0b;color:#1f2937;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">📊 演示訪問統計</a>
+            <a href="/defaults?source=manual" style="padding:6px 14px;background:#e8f5e9;color:#2e7d32;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">只看人工篩選</a>
+            <a href="/defaults?source=gemini_pro" style="padding:6px 14px;background:#e3f2fd;color:#1565c0;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">只看 Gemini Pro</a>
+            <a href="/defaults?source=gemini_fresh" style="padding:6px 14px;background:#fff3e0;color:#e65100;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">只看 Gemini Fresh</a>
+            <a href="/defaults?source=all" style="padding:6px 14px;background:#ede7f6;color:#4527a0;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">人工+Gemini 全部</a>
+            <a href="/defaults?source=global_all" style="padding:6px 14px;background:#fce4ec;color:#ad1457;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">整庫查詢+篩選標記</a>
+            <a href="/manuscripts" style="padding:6px 14px;background:#e0f2fe;color:#075985;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;">按寫卷瀏覽</a>
+        </div>
+
+        <!-- 任務池分配區 -->
+        <div style="background:#fff;border-radius:10px;padding:18px 22px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                <div>
+                    <strong style="font-size:1.05em;">任務池</strong>
+                    <span style="color:#888;margin-left:8px;">待分配 <strong style="color:#f57c00;">{{ pool_stats.total }}</strong> 字</span>
+                    <span style="color:#888;margin-left:8px;">（其中 {{ pool_stats.has_previous_work }} 字有前人成果）</span>
+                </div>
+                <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+                    <select id="assignAccount" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;">
+                        {% for acct in accounts %}
+                        {% if acct.total > 0 or acct.last_active or acct.student_id.startswith('scholar_') %}
+                        <option value="{{ acct.student_id }}">{{ acct.student_id }}{% if acct.display_name %} ({{ acct.display_name }}){% endif %}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                    <input id="assignCount" type="number" value="100" min="1" max="{{ pool_stats.total }}"
+                           style="width:80px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;" placeholder="數量"
+                           oninput="previewAssignment()">
+                    <span style="color:#888;font-size:0.9em;">字</span>
+                    <span id="assignPreview" style="color:#1976D2;font-size:0.9em;min-width:120px;"></span>
+                    <button onclick="assignTasks()" style="background:#1976D2;color:#fff;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-weight:600;">分配</button>
+                    <button onclick="showPool()" class="btn-sm" style="padding:6px 14px;">查看池子</button>
+                </div>
+            </div>
+            <div id="poolDetail" style="display:none;margin-top:12px;max-height:200px;overflow-y:auto;border-top:1px solid #eee;padding-top:10px;">
+                <div id="poolContent">載入中...</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <select id="filterStatus" onchange="filterTable()">
+                <option value="active" selected>有效賬號</option>
+                <option value="all">所有賬號</option>
+                <option value="has_tasks">有任務的</option>
+                <option value="has_pending">有未完成的</option>
+                <option value="all_done">全部完成</option>
+                <option value="no_activity">從未活動</option>
+                <option value="enabled">已啟用</option>
+                <option value="disabled">已禁用</option>
+            </select>
+            <input type="search" id="filterSearch" placeholder="搜索賬號 / 顯示名 / 備註"
+                   oninput="filterTable()"
+                   style="padding:5px 10px;border:1px solid #ccc;border-radius:4px;width:220px;font-size:13px;">
+            <span style="color:#888;font-size:0.9em;">共 <span id="visibleCount">{{ accounts|length }}</span> 個賬號</span>
+        </div>
+
+        <table id="accountTable">
+            <thead>
+                <tr>
+                    <th>賬號</th>
+                    <th>顯示名</th>
+                    <th>來源</th>
+                    <th>字數</th>
+                    <th>總次數</th>
+                    <th>進度</th>
+                    <th>最近活動</th>
+                    <th>24h活動</th>
+                    <th>累計在線</th>
+                    <th>狀態</th>
+                    <th>備註</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acct in accounts %}
+                <tr class="account-row {% if not acct.enabled %}disabled{% endif %}"
+                    data-student="{{ acct.student_id }}"
+                    data-total="{{ acct.total }}"
+                    data-completed="{{ acct.completed }}"
+                    data-pending="{{ acct.pending }}"
+                    data-enabled="{{ acct.enabled }}"
+                    data-last-active="{{ acct.last_active or '' }}">
+                    <td>
+                        <strong>{{ acct.student_id }}</strong>
+                    </td>
+                    <td>
+                        <input class="note-input" style="width:80px;" value="{{ acct.display_name or '' }}"
+                               placeholder="名稱"
+                               onchange="updateName('{{ acct.student_id }}', this.value)">
+                    </td>
+                    <td>
+                        {% if acct.student_id.startswith('scholar_') %}
+                            <span class="badge" style="background:#e8eaf6;color:#283593;">新體系</span>
+                        {% elif acct.student_id.startswith('student_') and acct.student_id.split('_')[1] | int <= 30 %}
+                            <span class="badge on">原有</span>
+                        {% else %}
+                            <span class="badge" style="background:#fff3e0;color:#e65100;">舊新分配</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if acct.total > 0 %}
+                            <span style="color:#43a047;font-weight:600;">{{ acct.completed }}</span>
+                            / {{ acct.total }}字
+                        {% else %}
+                            <span style="color:#999;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if acct.total_freq and acct.total_freq > 0 %}
+                            <span style="color:#43a047;font-weight:600;">{{ acct.completed_freq or 0 }}</span>
+                            / {{ acct.total_freq }}
+                        {% else %}
+                            <span style="color:#999;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if acct.total > 0 %}
+                        {% set pct = (acct.completed / acct.total * 100) | round | int %}
+                        <div class="progress-mini">
+                            <div class="bar"><div class="fill" style="width:{{ pct }}%"></div></div>
+                            <span class="pct">{{ pct }}%</span>
+                        </div>
+                        {% else %}
+                            <span style="color:#999;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if acct.last_active %}
+                            <span class="time-ago">{{ acct.last_active[:16] }}</span>
+                        {% else %}
+                            <span class="badge inactive">從未活動</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {# 24h 活動計數:超過 500 爬蟲警報 #}
+                        {% set act24 = acct.activity_24h or 0 %}
+                        {% if act24 >= 500 %}
+                            <span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:4px;font-weight:700;" title="活動異常高,可能有爬蟲行為;點詳情查看明細">⚠ {{ act24 }}</span>
+                        {% elif act24 >= 200 %}
+                            <span style="background:#f59e0b;color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;" title="活動偏高,留意">{{ act24 }}</span>
+                        {% elif act24 > 0 %}
+                            <span style="color:#374151;">{{ act24 }}</span>
+                        {% else %}
+                            <span style="color:#ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if acct.active_minutes > 0 %}
+                            {% if acct.active_minutes >= 60 %}
+                                <strong style="color:#1976D2;">{{ (acct.active_minutes / 60) | round(1) }}h</strong>
+                            {% else %}
+                                <strong style="color:#1976D2;">{{ acct.active_minutes }}min</strong>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:#ccc;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if acct.enabled %}
+                            <span class="badge on">啟用</span>
+                        {% else %}
+                            <span class="badge off">禁用</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <input class="note-input" value="{{ acct.note or '' }}"
+                               placeholder="添加備註..."
+                               onchange="updateNote('{{ acct.student_id }}', this.value)">
+                    </td>
+                    <td>
+                        <button class="btn-sm" onclick="resetPassword('{{ acct.student_id }}')" title="生成新密碼並提示複製">重置密碼</button>
+                        {% if acct.enabled %}
+                            <button class="btn-sm danger" onclick="toggleAccount('{{ acct.student_id }}', false)">禁用</button>
+                        {% else %}
+                            <button class="btn-sm success" onclick="toggleAccount('{{ acct.student_id }}', true)">啟用</button>
+                        {% endif %}
+                        {% if acct.total > 0 %}
+                            <button class="btn-sm" onclick="toggleDetail('{{ acct.student_id }}')">詳情</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr class="detail-row" id="detail-{{ acct.student_id }}">
+                    <td colspan="11" class="detail-cell">
+                        <div id="detail-content-{{ acct.student_id }}">載入中...</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+    function generatePassword() {
+        const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
+        let pwd = '';
+        for (let i = 0; i < 6; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+        document.getElementById('newAccountPwd').value = pwd;
+    }
+    // 頁面加載時自動生成一個密碼
+    generatePassword();
+
+    function createAccount() {
+        const num = document.getElementById('newAccountNum').value.trim();
+        const name = document.getElementById('newAccountName').value.trim();
+        const pwd = document.getElementById('newAccountPwd').value.trim();
+        if (!num) { alert('請輸入編號'); return; }
+        if (!pwd) { alert('請輸入密碼'); return; }
+        const accountId = 'scholar_' + num;
+        if (!confirm(`確認創建賬號？\n\n賬號: ${accountId}\n密碼: ${pwd}\n顯示名: ${name || '（無）'}`)) return;
+
+        fetch('/admin/create_account', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({account_id: accountId, password: pwd, display_name: name})
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert(`賬號 ${accountId} 創建成功！`);
+                document.getElementById('newAccountNum').value = '';
+                document.getElementById('newAccountName').value = '';
+                generatePassword();
+                location.reload();
+            } else {
+                alert('創建失敗: ' + (data.error || '未知錯誤'));
+            }
+        });
+    }
+
+    // 緩存池子數據用於預覽
+    let _poolCache = null;
+    function loadPoolCache() {
+        if (_poolCache) return Promise.resolve(_poolCache);
+        return fetch('/admin/pool_stats').then(r => r.json()).then(data => {
+            _poolCache = data.keywords;
+            return _poolCache;
+        });
+    }
+    // 頁面加載時預取
+    loadPoolCache().then(() => previewAssignment());
+    // 頁面加載時應用默認篩選
+    filterTable();
+
+    function previewAssignment() {
+        const count = parseInt(document.getElementById('assignCount').value) || 0;
+        const el = document.getElementById('assignPreview');
+        if (!count || !_poolCache) { el.textContent = ''; return; }
+        const batch = _poolCache.slice(0, Math.min(count, _poolCache.length));
+        const totalFreq = batch.reduce((s, k) => s + k.frequency, 0);
+        const freqStr = totalFreq >= 10000 ? `${(totalFreq/10000).toFixed(1)}萬` : totalFreq.toLocaleString();
+        el.textContent = `≈ ${freqStr}次工作量`;
+    }
+
+    function assignTasks() {
+        const studentId = document.getElementById('assignAccount').value;
+        const count = parseInt(document.getElementById('assignCount').value);
+        if (!count || count <= 0) { alert('請輸入有效數量'); return; }
+        const preview = document.getElementById('assignPreview').textContent;
+        if (!confirm(`確認分配 ${count} 個字給 ${studentId}？\n工作量: ${preview}\n（含前人標注數據複製）`)) return;
+
+        fetch('/admin/assign_tasks', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_id: studentId, count: count})
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert(`已分配 ${data.assigned} 個字，複製 ${data.copied_annotations} 條前人標注`);
+                location.reload();
+            } else {
+                alert('分配失敗: ' + (data.error || '未知錯誤'));
+            }
+        });
+    }
+
+    function showPool() {
+        const el = document.getElementById('poolDetail');
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            fetch('/admin/pool_stats').then(r => r.json()).then(data => {
+                let html = `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
+                data.keywords.forEach(k => {
+                    const prev = k.previous_owner ? `<span style="color:#999;font-size:0.8em;"> (${k.previous_owner})</span>` : '';
+                    html += `<span style="display:inline-block;padding:3px 8px;background:#f5f5f5;border-radius:4px;font-size:0.9em;">${k.keyword} <span style="color:#999;">${k.frequency}次</span>${prev}</span>`;
+                });
+                if (data.stats.total > 100) {
+                    html += `<span style="color:#999;padding:3px;">...還有 ${data.stats.total - 100} 個</span>`;
+                }
+                html += '</div>';
+                document.getElementById('poolContent').innerHTML = html;
+            });
+        } else {
+            el.style.display = 'none';
+        }
+    }
+
+    function returnTask(studentId, keyword) {
+        if (!confirm(`確認將「${keyword}」退回池子？`)) return;
+        fetch('/admin/return_task', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_id: studentId, keyword: keyword})
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                toggleDetail(studentId);
+                toggleDetail(studentId);
+            }
+        });
+    }
+
+    function resetTask(studentId, keyword) {
+        if (!confirm(`確認將「${keyword}」重置為未完成？`)) return;
+        fetch('/admin/reset_task', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_id: studentId, keyword: keyword})
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                toggleDetail(studentId); // refresh detail
+                toggleDetail(studentId);
+            }
+        });
+    }
+
+    function resetPassword(studentId) {
+        if (!confirm(`確定為 ${studentId} 生成新密碼嗎？原密碼將失效。`)) return;
+        fetch('/admin/reset_password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({account_id: studentId})
+        }).then(r => r.json()).then(data => {
+            if (!data.success) {
+                alert('重置失敗：' + (data.error || '未知錯誤'));
+                return;
+            }
+            const text = `賬號: ${studentId}\n密碼: ${data.new_password}`;
+            // 嘗試自動複製到剪貼簿
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(() => {});
+            }
+            alert(`新密碼已生成（已嘗試複製到剪貼簿）：\n\n${text}\n\n請立刻發給學生。此明文不再保存。`);
+        }).catch(err => alert('網絡錯誤：' + err.message));
+    }
+
+    function filterTable() {
+        const filter = document.getElementById('filterStatus').value;
+        const searchBox = document.getElementById('filterSearch');
+        const q = (searchBox ? searchBox.value : '').trim().toLowerCase();
+        const rows = document.querySelectorAll('.account-row');
+        let visible = 0;
+        rows.forEach(row => {
+            const total = parseInt(row.dataset.total);
+            const completed = parseInt(row.dataset.completed);
+            const pending = parseInt(row.dataset.pending);
+            const enabled = row.dataset.enabled === '1';
+            const lastActive = row.dataset.lastActive;
+            let show = true;
+            switch(filter) {
+                case 'active': show = total > 0 || lastActive; break;
+                case 'has_tasks': show = total > 0; break;
+                case 'has_pending': show = pending > 0; break;
+                case 'all_done': show = total > 0 && completed === total; break;
+                case 'no_activity': show = !lastActive; break;
+                case 'enabled': show = enabled; break;
+                case 'disabled': show = !enabled; break;
+            }
+            if (show && q) {
+                // 搜索：覆蓋 student_id + 顯示名 + 備註字段
+                const hay = row.textContent.toLowerCase();
+                if (!hay.includes(q)) show = false;
+            }
+            row.style.display = show ? '' : 'none';
+            const detailRow = document.getElementById('detail-' + row.dataset.student);
+            if (detailRow && !show) detailRow.classList.remove('show');
+            if (show) visible++;
+        });
+        document.getElementById('visibleCount').textContent = visible;
+    }
+
+    function toggleAccount(studentId, enable) {
+        fetch('/admin/toggle_account', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_id: studentId, enabled: enable})
+        }).then(r => r.json()).then(data => {
+            if (data.success) location.reload();
+        });
+    }
+
+    function updateNote(studentId, note) {
+        fetch('/admin/update_note', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_id: studentId, note: note})
+        });
+    }
+
+    function updateName(studentId, name) {
+        fetch('/admin/update_name', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({student_id: studentId, display_name: name})
+        });
+    }
+
+    function toggleDetail(studentId) {
+        const row = document.getElementById('detail-' + studentId);
+        if (row.classList.contains('show')) {
+            row.classList.remove('show');
+            return;
+        }
+        row.classList.add('show');
+        const content = document.getElementById('detail-content-' + studentId);
+        fetch('/admin/student_detail/' + studentId)
+            .then(r => r.json())
+            .then(data => {
+                let html = '<div style="display:flex;gap:24px;flex-wrap:wrap;">';
+
+                // Tasks summary
+                html += '<div style="flex:1;min-width:250px;">';
+                html += '<strong>任務列表</strong>';
+                html += '<div style="max-height:200px;overflow-y:auto;margin-top:8px;">';
+                if (data.tasks && data.tasks.length) {
+                    data.tasks.forEach(t => {
+                        const color = t.status === 'completed' ? '#bbb' : '#333';
+                        const icon = t.status === 'completed' ? '✓' : '○';
+                        let byTag = '';
+                        if (t.completed_by) {
+                            byTag = `<span style="background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:8px;font-size:0.8em;margin-left:4px;">${t.completed_by}</span>`;
+                        }
+                        const prevOwner = t.previous_owner ? `<span style="background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:8px;font-size:0.8em;margin-left:4px;">原:${t.previous_owner}</span>` : '';
+                        let actionBtn = '';
+                        if (t.status === 'completed') {
+                            actionBtn = `<button class="btn-sm" style="font-size:0.75em;padding:1px 6px;margin-left:4px;" onclick="resetTask('${studentId}','${t.keyword}')">重置</button>`;
+                        } else {
+                            actionBtn = `<button class="btn-sm danger" style="font-size:0.75em;padding:1px 6px;margin-left:4px;" onclick="returnTask('${studentId}','${t.keyword}')">退回池子</button>`;
+                        }
+                        const resetBtn = actionBtn;
+                        html += `<div style="padding:4px 0;color:${color};font-size:0.9em;display:flex;align-items:center;gap:4px;">`;
+                        html += `<span>${icon} ${t.keyword}</span><span style="color:#999;">${t.frequency}次</span>${byTag}${prevOwner}${resetBtn}</div>`;
+                    });
+                }
+                html += '</div></div>';
+
+                // Session history
+                html += '<div style="flex:1;min-width:250px;">';
+                html += '<strong>工作記錄（近30天）</strong>';
+                html += '<div class="activity-list" style="margin-top:8px;">';
+                if (data.sessions && data.sessions.length) {
+                    let totalMin = 0;
+                    data.sessions.forEach(s => {
+                        totalMin += s.duration;
+                        const durStr = s.duration >= 60 ? `${(s.duration/60).toFixed(1)}h` : `${s.duration}min`;
+
+                        // 質量標籤
+                        const qMap = {careful:'🟢 仔細', normal:'🟡 一般', rushed:'🔴 匆忙'};
+                        const qTag = s.quality ? `<span style="font-size:0.8em;margin-left:4px;">${qMap[s.quality]||''}</span>` : '';
+
+                        // 滾動和按鈕詳情
+                        let detailParts = [];
+                        if (s.actions > 0) detailParts.push(`${s.actions}次操作`);
+                        if (s.scroll_slow > 0 || s.scroll_fast > 0) {
+                            detailParts.push(`滾動:慢${s.scroll_slow}/快${s.scroll_fast}`);
+                        }
+                        if (s.btn_clicks > 0) detailParts.push(`按鈕${s.btn_clicks}次`);
+                        const detailStr = detailParts.length ? `<span style="color:#999;font-size:0.85em;"> ${detailParts.join(', ')}</span>` : '';
+
+                        html += `<div class="activity-item" style="flex-wrap:wrap;">`;
+                        html += `<span class="time">${s.start}</span>`;
+                        html += `<span class="action" style="font-weight:500;">${durStr}${qTag}</span>`;
+                        html += detailStr;
+                        html += `</div>`;
+                    });
+                    const totalStr = totalMin >= 60 ? `${(totalMin/60).toFixed(1)}小時` : `${totalMin}分鐘`;
+                    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e0e0e0;font-weight:600;">累計: ${totalStr}，${data.sessions.length}次工作</div>`;
+                } else {
+                    html += '<div style="color:#999;">暫無工作記錄</div>';
+                }
+                html += '</div></div>';
+
+                // Recent key actions (non-heartbeat)
+                html += '<div style="flex:1;min-width:250px;">';
+                html += '<strong>關鍵操作</strong>';
+                html += '<div class="activity-list" style="margin-top:8px;">';
+                const keyActions = (data.activities || []).filter(a => a.action !== 'heartbeat');
+                if (keyActions.length) {
+                    keyActions.forEach(a => {
+                        html += `<div class="activity-item">`;
+                        html += `<span class="time">${a.created_at || ''}</span>`;
+                        html += `<span class="action">${a.action} ${a.detail || ''}</span>`;
+                        html += `</div>`;
+                    });
+                } else {
+                    html += '<div style="color:#999;">暫無操作記錄</div>';
+                }
+                html += '</div></div>';
+                html += '</div>';
+                content.innerHTML = html;
+            });
+    }
+    </script>
+</body>
+</html>

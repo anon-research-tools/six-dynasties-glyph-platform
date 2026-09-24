@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>演示模式訪問統計</title>
+    <style>
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background: #f5f6fa; color: #1f2937;
+            margin: 0; padding: 30px;
+        }
+        h1 { margin: 0 0 6px 0; color: #1f2937; font-size: 24px; }
+        .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+        .stat-cards {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white; padding: 20px; border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .stat-card .label { color: #6b7280; font-size: 13px; margin-bottom: 6px; }
+        .stat-card .value { font-size: 32px; font-weight: 700; color: #1f2937; }
+        .stat-card .hint { color: #9ca3af; font-size: 12px; margin-top: 4px; }
+
+        .section {
+            background: white; padding: 22px 26px; border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin: 0 0 14px 0; font-size: 16px;
+            color: #374151; font-weight: 600;
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f3f4f6; }
+        th { color: #6b7280; font-weight: 500; background: #f9fafb; }
+        td.truncate { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        td.mono { font-family: Menlo, Consolas, monospace; font-size: 12px; }
+
+        /* 簡單柱狀圖（CSS-only） */
+        .day-bar {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 0;
+        }
+        .day-bar .date {
+            width: 90px; font-family: Menlo, Consolas, monospace; font-size: 12px;
+            color: #6b7280;
+        }
+        .day-bar .bar {
+            height: 18px; background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 3px; color: #1f2937;
+            font-size: 11px; font-weight: 600;
+            display: flex; align-items: center; padding: 0 8px;
+            min-width: 28px;
+        }
+
+        .back-btn {
+            display: inline-block; padding: 6px 14px;
+            background: #6b7280; color: white; text-decoration: none;
+            border-radius: 6px; font-size: 13px; margin-bottom: 20px;
+        }
+        .back-btn:hover { background: #4b5563; }
+
+        .empty { color: #9ca3af; text-align: center; padding: 30px; }
+
+        @media (max-width: 700px) {
+            .stat-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <a href="/admin" class="back-btn">← 返回管理後台</a>
+    <h1>演示模式訪問統計</h1>
+    <div class="subtitle">
+        /demo 入口的訪問情況。數據來自 activity_log 中 <code>action='演示訪問'</code> 的記錄。
+    </div>
+
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="label">總訪問數（全部時間）</div>
+            <div class="value">{{ stats.total_visits }}</div>
+            <div class="hint">包含重複訪問</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">獨立訪客（近 30 天）</div>
+            <div class="value">{{ stats.unique_visitors }}</div>
+            <div class="hint">按 IP + UA 組合去重</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">近 30 天訪問</div>
+            <div class="value">
+                {% set total_recent = stats.by_day | sum(attribute='count') %}
+                {{ total_recent }}
+            </div>
+            <div class="hint">
+                日均 {{ '%.1f'|format(total_recent / 30) }} 次
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>近 30 天訪問趨勢</h2>
+        {% if stats.by_day %}
+            {% set max_count = stats.by_day | map(attribute='count') | max %}
+            {% for day in stats.by_day %}
+            <div class="day-bar">
+                <div class="date">{{ day.date }}</div>
+                <div class="bar" style="width: {{ (day.count / max_count * 70) | round | int }}%;">
+                    {{ day.count }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">尚無訪問記錄</div>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>最近 50 次訪問</h2>
+        {% if stats.recent_visits %}
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 160px;">時間（北京）</th>
+                    <th style="width: 120px;">IP</th>
+                    <th>User-Agent</th>
+                    <th>Referer</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for v in stats.recent_visits %}
+            <tr>
+                <td class="mono">{{ v.time }}</td>
+                <td class="mono">{{ v.ip or '—' }}</td>
+                <td class="truncate">{{ v.ua or '—' }}</td>
+                <td class="truncate">{{ v.ref or '—' }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div class="empty">尚無訪問記錄</div>
+        {% endif %}
+    </div>
+
+    {% if stats.error %}
+    <div class="section" style="background:#fef2f2; border-color:#fca5a5;">
+        <h2 style="color:#b91c1c;">查詢出錯</h2>
+        <div class="mono">{{ stats.error }}</div>
+    </div>
+    {% endif %}
+</body>
+</html>

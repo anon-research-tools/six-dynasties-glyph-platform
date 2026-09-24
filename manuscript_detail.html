@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ manuscript.other_info_code }} - 寫卷字頻索引</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: #eef1f5;
+            color: #172033;
+        }
+        a { color: inherit; text-decoration: none; }
+        .topbar {
+            background: #192234;
+            color: #fff;
+            padding: 15px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .topbar h1 { margin: 0; font-size: 18px; letter-spacing: 0; }
+        .crumbs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+        .crumbs a {
+            color: #dbeafe;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,.08);
+        }
+        .wrap { padding: 18px 24px 28px; }
+        .summary {
+            display: grid;
+            grid-template-columns: minmax(280px, 1.15fr) minmax(280px, .85fr);
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        .panel {
+            background: #fff;
+            border: 1px solid #dde4ee;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .code-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+        .code-title strong { font-size: 24px; letter-spacing: 0; }
+        .code-title span { color: #64748b; font-size: 13px; }
+        .meta-grid {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 72px 1fr;
+            gap: 6px 12px;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .meta-grid .label { color: #64748b; }
+        .meta-grid .value { overflow-wrap: anywhere; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(92px, 1fr));
+            gap: 10px;
+        }
+        .stat {
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 11px;
+            min-height: 74px;
+        }
+        .stat .num { display: block; font-size: 22px; font-weight: 700; color: #0f172a; }
+        .stat .label { display: block; margin-top: 4px; color: #64748b; font-size: 12px; }
+        .controls {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background: #eef1f5;
+            padding: 0 0 12px;
+        }
+        .control-inner {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #dde4ee;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .control-inner input {
+            width: min(360px, 100%);
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 9px 11px;
+            font-size: 14px;
+        }
+        .seg {
+            display: inline-flex;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+        .seg button {
+            border: 0;
+            background: #fff;
+            color: #334155;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            min-width: 82px;
+        }
+        .seg button + button { border-left: 1px solid #cbd5e1; }
+        .seg button.active { background: #1d4ed8; color: #fff; }
+        .detail-toggle {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            border-radius: 7px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            min-width: 86px;
+        }
+        .detail-toggle.active {
+            border-color: #1d4ed8;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .counter { color: #64748b; font-size: 13px; margin-left: auto; }
+        .freq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .char-row {
+            display: grid;
+            grid-template-columns: 92px minmax(220px, 1fr) minmax(300px, 1.35fr) 88px;
+            gap: 12px;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #dce4ee;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #172033;
+            text-decoration: none;
+            content-visibility: auto;
+            contain-intrinsic-size: 118px;
+            cursor: pointer;
+        }
+        .char-row:hover { border-color: #93b4e8; box-shadow: 0 3px 12px rgba(30, 64, 175, .08); }
+        .rank-glyph {
+            display: grid;
+            grid-template-columns: 34px 1fr;
+            gap: 8px;
+            align-items: center;
+            min-width: 0;
+        }
+        .rank {
+            color: #94a3b8;
+            font-size: 12px;
+            text-align: right;
+        }
+        .glyph {
+            font-size: 42px;
+            line-height: 1;
+            font-family: "Songti SC", "Noto Serif CJK TC", serif;
+            text-decoration: none;
+            border-bottom: 0;
+        }
+        .main-meta { min-width: 0; }
+        .title-line {
+            display: flex;
+            gap: 10px;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .title-line .count {
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 17px;
+        }
+        .title-line .pos {
+            color: #64748b;
+            font-size: 12px;
+        }
+        .tags {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 7px;
+        }
+        .tag {
+            border: 1px solid #dbe4ef;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #526071;
+            padding: 2px 7px;
+            font-size: 12px;
+        }
+        .tag.green { color: #166534; background: #dcfce7; border-color: #86efac; }
+        .tag.amber { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+        .tag.red { color: #991b1b; background: #fee2e2; border-color: #fecaca; }
+        .forms {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 7px;
+            color: #64748b;
+            font-size: 12px;
+        }
+        .forms span {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 2px 5px;
+        }
+        .preview {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .thumb {
+            width: 58px;
+            height: 58px;
+            flex: 0 0 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #dbe4ef;
+            border-radius: 7px;
+            background: #f8fafc;
+            text-decoration: none;
+            position: relative;
+        }
+        .thumb img {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: contain;
+            -webkit-user-drag: none;
+            user-select: none;
+        }
+        .thumb .mini {
+            position: absolute;
+            right: 3px;
+            bottom: 2px;
+            background: rgba(15, 23, 42, .72);
+            color: #fff;
+            border-radius: 4px;
+            padding: 1px 4px;
+            font-size: 10px;
+        }
+        body:not(.show-details) .tags,
+        body:not(.show-details) .forms,
+        body:not(.show-details) .thumb .mini {
+            display: none;
+        }
+        body:not(.show-details) .char-row {
+            contain-intrinsic-size: 86px;
+        }
+        .more {
+            color: #64748b;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .no-preview {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .open-link {
+            justify-self: end;
+            text-decoration: none;
+            color: #1d4ed8;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 7px 10px;
+            background: #fff;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        .empty {
+            display: none;
+            background: #fff;
+            border: 1px solid #dde4ee;
+            border-radius: 8px;
+            padding: 18px;
+            color: #64748b;
+        }
+        @media (max-width: 980px) {
+            .summary { grid-template-columns: 1fr; }
+            .char-row { grid-template-columns: 84px 1fr; align-items: start; }
+            .preview { grid-column: 1 / -1; }
+            .open-link { grid-column: 2; justify-self: start; }
+        }
+        @media (max-width: 640px) {
+            .wrap { padding: 14px; }
+            .stats { grid-template-columns: repeat(2, minmax(100px, 1fr)); }
+            .counter { margin-left: 0; width: 100%; }
+            .controls { position: static; }
+            .char-row { grid-template-columns: 1fr; }
+            .rank-glyph { grid-template-columns: 32px auto; }
+            .open-link { grid-column: auto; }
+        }
+    </style>
+</head>
+<body>
+    {% set catalog = manuscript.catalog or {} %}
+    <header class="topbar">
+        <h1>寫卷字頻索引</h1>
+        <div class="crumbs">
+            <a href="/manuscripts">寫卷列表</a>
+            <a href="/admin/manuscripts?q={{ manuscript.other_info_code|urlencode }}">編號查詢</a>
+            <a href="/?q={{ manuscript.other_info_code|urlencode }}&column=other_info">全庫搜索</a>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="summary">
+            <div class="panel">
+                <div class="code-title">
+                    <strong>{{ manuscript.other_info_code }}</strong>
+                    <span>{{ manuscript.publication_id or manuscript.publication_label or '' }}</span>
+                </div>
+                <div class="meta-grid">
+                    <div class="label">題名</div><div class="value">{{ catalog.get('題名') or '-' }}</div>
+                    <div class="label">紀年</div><div class="value">{{ catalog.get('西元紀') or manuscript.year_hint or '-' }}{% if catalog.get('原卷紀年') %}｜{{ catalog.get('原卷紀年') }}{% endif %}</div>
+                    <div class="label">館藏</div><div class="value">{{ catalog.get('館藏地') or '-' }}</div>
+                    <div class="label">卷號</div><div class="value">{{ catalog.get('卷號') or '-' }}</div>
+                    <div class="label">頁次</div><div class="value">{{ manuscript.min_page }} - {{ manuscript.max_page }}{% if manuscript.marker_summary %}｜{{ manuscript.marker_summary }}{% endif %}</div>
+                    {% if catalog.get('圖片出處') %}
+                    <div class="label">圖源</div><div class="value">{{ catalog.get('圖片出處') }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="panel">
+                <div class="stats">
+                    <div class="stat"><span class="num">{{ stats.char_count }}</span><span class="label">字圖總數</span></div>
+                    <div class="stat"><span class="num">{{ stats.cluster_count }}</span><span class="label">字頭數</span></div>
+                    <div class="stat"><span class="num">{{ stats.multi_form_cluster_count }}</span><span class="label">多字形 / 有編號</span></div>
+                    <div class="stat"><span class="num">{{ stats.default_cluster_count }}</span><span class="label">已有代表字</span></div>
+                    <div class="stat"><span class="num">{{ stats.marked_cluster_count }}</span><span class="label">有人工標記</span></div>
+                    <div class="stat"><span class="num">{{ stats.attention_cluster_count }}</span><span class="label">需注意</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="controls">
+            <div class="control-inner">
+                <input id="charSearch" placeholder="篩選字頭、頁號、字形或標記">
+                <div class="seg" aria-label="篩選模式">
+                    <button class="active" data-mode="all" type="button">全部</button>
+                    <button data-mode="multi" type="button">多字形</button>
+                    <button data-mode="marked" type="button">有標記</button>
+                    <button data-mode="default" type="button">代表字</button>
+                </div>
+                <button id="detailToggle" class="detail-toggle" type="button">顯示細節</button>
+                <div class="counter"><span id="visibleCount">{{ clusters|length }}</span> / {{ clusters|length }}</div>
+            </div>
+        </section>
+
+        <section id="charList" class="freq-list">
+            {% for item in clusters %}
+            <article class="char-row"
+                     data-href="/manuscripts/{{ manuscript.other_info_code|urlencode }}/chars/{{ item.key|urlencode }}"
+                     data-key="{{ item.key }}"
+                     data-search="{{ item.key }} {{ item.display }} {% for form in item.forms %}{{ form.value }} {% endfor %} page{{ item.first_page }} col{{ item.first_column }}"
+                     data-multi="{{ 1 if item.has_multiple_forms else 0 }}"
+                     data-marked="{{ 1 if item.marked_count else 0 }}"
+                     data-default="{{ 1 if item.default_count else 0 }}">
+                <div class="rank-glyph">
+                    <div class="rank">{{ loop.index }}</div>
+                    <a class="glyph" href="/manuscripts/{{ manuscript.other_info_code|urlencode }}/chars/{{ item.key|urlencode }}" title="查看全部字圖">{{ item.key }}</a>
+                </div>
+
+                <div class="main-meta">
+                    <div class="title-line">
+                        <span class="count">{{ item.count }} 個單字</span>
+                        <span class="pos">首見：頁 {{ item.first_page or '-' }}，欄 {{ item.first_column or '-' }}，序 {{ item.first_char_no or '-' }}</span>
+                    </div>
+                    <div class="tags">
+                        {% if item.default_count %}<span class="tag green">代表 {{ item.default_count }}</span>{% endif %}
+                        {% if item.marked_count %}<span class="tag amber">標記 {{ item.marked_count }}</span>{% endif %}
+                        {% if item.bad_count %}<span class="tag red">殘損 {{ item.bad_count }}</span>{% endif %}
+                        {% if item.mis_count %}<span class="tag red">誤入 {{ item.mis_count }}</span>{% endif %}
+                        {% for num, count in item.numbered_counts.items() %}
+                        <span class="tag">字形{{ num }}:{{ count }}</span>
+                        {% endfor %}
+                        {% if item.attention_count %}<span class="tag amber">注意 {{ item.attention_count }}</span>{% endif %}
+                    </div>
+                    {% if item.forms %}
+                    <div class="forms">
+                        {% for form in item.forms %}
+                        <span>{{ form.value }} {{ form.count }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="preview" aria-label="代表字圖">
+                    {% if item.representative_rows %}
+                    {% for rep in item.representative_rows %}
+                    <a class="thumb" href="/get_original_image/{{ rep.char_id|urlencode }}" target="_blank" rel="noopener" title="左鍵查看原圖；右鍵可複製字圖（頁 {{ rep.page }} 欄 {{ rep.column }} 序 {{ rep.char_no }}）">
+                        <img src="{{ rep.img_url|img_url }}" alt="{{ item.key }} {{ rep.char_id }}" loading="lazy" decoding="async" draggable="false" title="左鍵查看原圖；右鍵可複製字圖">
+                        {% if rep.default_keyword %}<span class="mini">{{ rep.default_keyword }}</span>{% endif %}
+                    </a>
+                    {% endfor %}
+                    {% if item.hidden_representative_count %}
+                    <span class="more">+{{ item.hidden_representative_count }}</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="no-preview">未選代表字圖</span>
+                    {% endif %}
+                </div>
+
+                <a class="open-link" href="/manuscripts/{{ manuscript.other_info_code|urlencode }}/chars/{{ item.key|urlencode }}" target="_blank" rel="noopener" title="在新標籤頁打開全部字圖">全部字圖</a>
+            </article>
+            {% endfor %}
+        </section>
+        <div id="emptyState" class="empty">沒有符合當前篩選的字。</div>
+    </main>
+
+    <script>
+        const rows = Array.from(document.querySelectorAll('.char-row'));
+        const search = document.getElementById('charSearch');
+        const detailToggle = document.getElementById('detailToggle');
+        const visibleCount = document.getElementById('visibleCount');
+        const emptyState = document.getElementById('emptyState');
+        let mode = 'all';
+
+        function norm(value) {
+            return (value || '').toString().trim().toLowerCase();
+        }
+
+        function applyFilters() {
+            const q = norm(search.value);
+            let visible = 0;
+            for (const row of rows) {
+                const matchesText = !q || norm(row.dataset.search).includes(q);
+                const matchesMode =
+                    mode === 'all' ||
+                    (mode === 'multi' && row.dataset.multi === '1') ||
+                    (mode === 'marked' && row.dataset.marked === '1') ||
+                    (mode === 'default' && row.dataset.default === '1');
+                const show = matchesText && matchesMode;
+                row.style.display = show ? '' : 'none';
+                if (show) visible += 1;
+            }
+            visibleCount.textContent = visible;
+            emptyState.style.display = visible ? 'none' : 'block';
+        }
+
+        document.querySelectorAll('.seg button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.seg button').forEach(item => item.classList.remove('active'));
+                button.classList.add('active');
+                mode = button.dataset.mode;
+                applyFilters();
+            });
+        });
+        search.addEventListener('input', applyFilters);
+
+        function setDetailsVisible(show) {
+            document.body.classList.toggle('show-details', show);
+            detailToggle.classList.toggle('active', show);
+            detailToggle.textContent = show ? '隱藏細節' : '顯示細節';
+            localStorage.setItem('manuscript_detail_show_details', show ? '1' : '0');
+        }
+
+        setDetailsVisible(localStorage.getItem('manuscript_detail_show_details') === '1');
+        detailToggle.addEventListener('click', () => {
+            setDetailsVisible(!document.body.classList.contains('show-details'));
+        });
+
+        rows.forEach(row => {
+            row.addEventListener('click', event => {
+                if (event.target.closest('a')) return;
+                window.location.href = row.dataset.href;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寫卷編號查詢 - 管理後台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", Arial, sans-serif;
+            background: #f2f4f8;
+            color: #1f2937;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; font-size: 1.2em; }
+        .header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .header a, .header button {
+            text-decoration: none;
+            color: #fff;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .content { padding: 18px 24px 24px; }
+        .toolbar {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .toolbar form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .toolbar input {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 13px;
+            min-width: 360px;
+        }
+        .toolbar button {
+            border: 1px solid #1f2937;
+            background: #1f2937;
+            color: #fff;
+            border-radius: 6px;
+            padding: 7px 14px;
+            cursor: pointer;
+        }
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #475569;
+        }
+        .pill {
+            border: 1px solid #dbe4f0;
+            background: #f8fafc;
+            border-radius: 999px;
+            padding: 5px 10px;
+        }
+        .note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        }
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .table-wrap {
+            overflow: auto;
+            max-height: calc(100vh - 260px);
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            background: #fff;
+        }
+        .table-wrap table { box-shadow: none; border-radius: 0; min-width: 2600px; }
+        .filter-row th {
+            top: 39px;
+            background: #f1f5f9;
+            padding: 6px 8px;
+        }
+        .column-filter {
+            width: 100%;
+            min-width: 92px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 5px 7px;
+            font-size: 12px;
+            background: #fff;
+        }
+        .column-panel {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .column-panel-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 10px;
+        }
+        .column-panel-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .mini-btn {
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 6px;
+            padding: 5px 9px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .column-toggles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+        .column-toggle {
+            display: inline-flex;
+            gap: 5px;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 12px;
+            color: #334155;
+            user-select: none;
+        }
+        .column-toggle input { margin: 0; }
+        tr:hover { background: #f8fbff; }
+        tr.catalog-only { background: #fffdf7; }
+        tr.catalog-only:hover { background: #fffbeb; }
+        .code {
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+        }
+        .small {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .ok {
+            display: inline-block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .warn {
+            display: inline-block;
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .missing {
+            display: inline-block;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: minmax(68px, auto) minmax(180px, 1fr);
+            gap: 4px 10px;
+            max-width: 520px;
+            line-height: 1.55;
+        }
+        .detail-label {
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .detail-value {
+            color: #1f2937;
+            overflow-wrap: anywhere;
+        }
+        .cell-text {
+            max-width: 260px;
+            min-width: 120px;
+            overflow-wrap: anywhere;
+            line-height: 1.55;
+        }
+        .excel-cell {
+            max-width: 280px;
+            min-width: 120px;
+            overflow-wrap: anywhere;
+            line-height: 1.55;
+        }
+        .collapsible-text {
+            position: relative;
+        }
+        .collapsible-text.is-collapsed {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            max-height: 4.8em;
+        }
+        .text-toggle {
+            margin-top: 5px;
+            border: 0;
+            background: transparent;
+            color: #1d4ed8;
+            font-size: 12px;
+            padding: 0;
+            cursor: pointer;
+        }
+        .hidden-col { display: none !important; }
+        .links a {
+            color: #1d4ed8;
+            text-decoration: none;
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+        @media (max-width: 900px) {
+            .header { align-items: flex-start; flex-direction: column; gap: 10px; }
+            .content { padding: 14px; }
+            .toolbar input { min-width: 100%; }
+            .table-wrap { max-height: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>寫卷編號查詢</h1>
+        <div class="actions">
+            <a href="/admin">返回管理後台</a>
+            <a href="/manuscripts">寫卷瀏覽</a>
+            <a href="/admin/defaults_sources">來源字頭總覽</a>
+            <button onclick="window.location.href='/'">返回搜索頁</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="toolbar">
+            <form method="get">
+                <label>
+                    查詢：
+                    <input type="text" name="q" value="{{ query }}" placeholder="可輸入 DH_517_950、950、嘉德、Jiade、成實論、Princeton1998-116">
+                </label>
+                <button type="submit">查詢</button>
+                {% if query %}
+                <a href="/admin/manuscripts" style="color:#1d4ed8;text-decoration:none;">清空</a>
+                {% endif %}
+            </form>
+            <div class="stats">
+                <span class="pill">DB 寫卷碼 {{ total_codes }}</span>
+                <span class="pill">目錄表 {{ total_catalog }} 條</span>
+                <span class="pill">目前結果 {{ total_results }}</span>
+                <span class="pill">已對上目錄 {{ matched_count }}</span>
+                <span class="pill">目錄待尋找 {{ catalog_only_count }}</span>
+            </div>
+            <div class="note">
+                這裡把 characters.db 的 <strong>other_info_code</strong> 與「敦煌紀年寫卷目錄」逐條合併。已入庫的顯示 DB 統計與入口；Excel 中尚未進入 DB、或暫未找到真實寫卷的條目，也會以「目錄待尋找」列出，便於後續補找。
+            </div>
+        </div>
+
+        <div class="column-panel">
+            <div class="column-panel-title">
+                <span>列顯示 / 隱藏</span>
+                <div class="column-panel-actions">
+                    <button type="button" class="mini-btn" onclick="setAllColumns(true)">全部顯示</button>
+                    <button type="button" class="mini-btn" onclick="showCoreColumns()">只看核心列</button>
+                    <button type="button" class="mini-btn" onclick="clearColumnFilters()">清空篩選</button>
+                </div>
+            </div>
+            <div class="column-toggles" id="columnToggles"></div>
+        </div>
+
+        <div class="table-wrap">
+        <table id="manuscriptTable">
+            <thead>
+                <tr>
+                    <th data-col="publication">出版編號</th>
+                    <th data-col="code">寫卷碼</th>
+                    <th data-col="marker">DB 標註</th>
+                    <th data-col="db">DB 統計</th>
+                    <th data-col="sample">樣例圖片</th>
+                    <th data-col="match">目錄對應</th>
+                    <th data-col="title_year">題名 / 紀年</th>
+                    {% for field in excel_fields %}
+                    <th data-col="excel_{{ loop.index }}">{{ field }}</th>
+                    {% endfor %}
+                    <th data-col="actions">操作入口</th>
+                </tr>
+                <tr class="filter-row">
+                    <th data-col="publication"><input class="column-filter" data-col="publication" placeholder="篩選"></th>
+                    <th data-col="code"><input class="column-filter" data-col="code" placeholder="篩選"></th>
+                    <th data-col="marker"><input class="column-filter" data-col="marker" placeholder="篩選"></th>
+                    <th data-col="db"><input class="column-filter" data-col="db" placeholder="篩選"></th>
+                    <th data-col="sample"><input class="column-filter" data-col="sample" placeholder="篩選"></th>
+                    <th data-col="match"><input class="column-filter" data-col="match" placeholder="篩選"></th>
+                    <th data-col="title_year"><input class="column-filter" data-col="title_year" placeholder="篩選"></th>
+                    {% for field in excel_fields %}
+                    <th data-col="excel_{{ loop.index }}"><input class="column-filter" data-col="excel_{{ loop.index }}" placeholder="篩選"></th>
+                    {% endfor %}
+                    <th data-col="actions"><input class="column-filter" data-col="actions" placeholder="篩選"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                {% set catalog = row.catalog or {} %}
+                <tr class="{% if row.catalog_only %}catalog-only{% endif %}">
+                    <td data-col="publication">
+                        <div class="code">{{ row.publication_id or '-' }}</div>
+                        <div class="small">{{ row.publication_label or '' }}</div>
+                    </td>
+                    <td data-col="code">
+                        <div class="code">{{ row.other_info_code or '目錄行 #' ~ catalog.get('_row_index', '-') }}</div>
+                        <div class="small">紀年提示：{{ row.year_hint or '-' }}</div>
+                    </td>
+                    <td data-col="marker">
+                        {% if row.marker_summary %}
+                        <div class="code">{{ row.marker_summary }}</div>
+                        {% else %}
+                        <div class="small">-</div>
+                        {% endif %}
+                    </td>
+                    <td data-col="db">
+                        {% if row.catalog_only %}
+                        <span class="missing">目錄待尋找</span>
+                        <div class="small">Excel 有記錄，DB 尚未匹配到寫卷碼。</div>
+                        {% else %}
+                        <div>字圖數：<strong>{{ row.char_count }}</strong></div>
+                        <div>頁數：{{ row.page_count }}</div>
+                        <div class="small">頁號範圍：{{ row.min_page }} - {{ row.max_page }}</div>
+                        {% endif %}
+                    </td>
+                    <td data-col="sample">
+                        <div>{{ row.sample_img_name or '-' }}</div>
+                        <div class="small">{{ row.sample_other_info or '' }}</div>
+                    </td>
+                    <td data-col="match">
+                        {% if row.matched_catalog %}
+                        <span class="ok">已對上目錄</span>
+                        <div>館藏地：{{ catalog.get('館藏地') or '-' }}</div>
+                        <div>卷號：{{ catalog.get('卷號') or '-' }}</div>
+                        {% elif row.catalog_only %}
+                        <span class="missing">未入庫 / 待補找</span>
+                        <div>館藏地：{{ catalog.get('館藏地') or '-' }}</div>
+                        <div>卷號：{{ catalog.get('卷號') or '-' }}</div>
+                        {% else %}
+                        <span class="warn">未自動對上</span>
+                        <div class="small">可用樣例圖片名或紀年再人工核對。</div>
+                        {% endif %}
+                    </td>
+                    <td data-col="title_year">
+                        <div class="cell-text">{{ catalog.get('題名') or '-' }}</div>
+                        <div class="small">西元紀：{{ catalog.get('西元紀') or row.year_hint or '-' }}</div>
+                        {% if catalog.get('圖片出處') %}
+                        <div class="small cell-text">圖片出處：{{ catalog.get('圖片出處') }}</div>
+                        {% endif %}
+                    </td>
+                    {% for field in excel_fields %}
+                    <td data-col="excel_{{ loop.index }}">
+                        <div class="excel-cell">{{ catalog.get(field) or '-' }}</div>
+                    </td>
+                    {% endfor %}
+                    <td class="links" data-col="actions">
+                        {% if row.other_info_code %}
+                        <a href="/manuscripts/{{ row.other_info_code|urlencode }}">寫卷瀏覽</a>
+                        <a href="/?q={{ row.other_info_code|urlencode }}&column=other_info">全庫搜索</a>
+                        <a href="/defaults?search_value={{ row.other_info_code|urlencode }}&targets=other_info&source=all">已篩選結果</a>
+                        {% else %}
+                        <span class="small">待找到圖片或寫卷碼後再進入全庫。</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            {% if not rows %}
+                <tr>
+                    <td colspan="{{ 8 + excel_fields|length }}" class="small">沒有查到符合條件的寫卷碼或目錄行。可以改用 DH 編號、卷號、題名、圖片名或紀年再試。</td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    <script>
+        const COLUMN_STORAGE_KEY = 'admin_manuscripts_visible_columns_v2';
+        const CORE_COLUMNS = new Set(['publication', 'code', 'marker', 'db', 'sample', 'match', 'title_year', '上傳狀態', '總字數', '館藏地', '卷號', '題名', '西元紀', '圖片出處', 'actions']);
+        const table = document.getElementById('manuscriptTable');
+        const allColumns = Array.from(table.querySelectorAll('thead tr:first-child th')).map(th => ({
+            key: th.dataset.col,
+            label: th.innerText.trim()
+        }));
+
+        function loadVisibleColumns() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(COLUMN_STORAGE_KEY) || 'null');
+                if (Array.isArray(saved) && saved.length) return new Set(saved);
+            } catch (e) {}
+            return new Set(allColumns.map(c => c.key));
+        }
+
+        let visibleColumns = loadVisibleColumns();
+
+        function saveVisibleColumns() {
+            localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(Array.from(visibleColumns)));
+        }
+
+        function renderColumnToggles() {
+            const box = document.getElementById('columnToggles');
+            box.innerHTML = '';
+            allColumns.forEach(col => {
+                const label = document.createElement('label');
+                label.className = 'column-toggle';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = visibleColumns.has(col.key);
+                input.addEventListener('change', () => {
+                    if (input.checked) visibleColumns.add(col.key);
+                    else visibleColumns.delete(col.key);
+                    applyColumnVisibility();
+                    saveVisibleColumns();
+                });
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(col.label));
+                box.appendChild(label);
+            });
+        }
+
+        function applyColumnVisibility() {
+            allColumns.forEach(col => {
+                const hidden = !visibleColumns.has(col.key);
+                table.querySelectorAll(`[data-col="${CSS.escape(col.key)}"]`).forEach(cell => {
+                    cell.classList.toggle('hidden-col', hidden);
+                });
+            });
+        }
+
+        function setAllColumns(show) {
+            visibleColumns = show ? new Set(allColumns.map(c => c.key)) : new Set();
+            saveVisibleColumns();
+            renderColumnToggles();
+            applyColumnVisibility();
+        }
+
+        function showCoreColumns() {
+            visibleColumns = new Set(allColumns.filter(c => CORE_COLUMNS.has(c.key) || CORE_COLUMNS.has(c.label)).map(c => c.key));
+            saveVisibleColumns();
+            renderColumnToggles();
+            applyColumnVisibility();
+        }
+
+        function clearColumnFilters() {
+            table.querySelectorAll('.column-filter').forEach(input => input.value = '');
+            applyColumnFilters();
+        }
+
+        function applyColumnFilters() {
+            const filters = Array.from(table.querySelectorAll('.column-filter'))
+                .map(input => ({ key: input.dataset.col, value: input.value.trim().toLowerCase() }))
+                .filter(item => item.value);
+            table.querySelectorAll('tbody tr').forEach(row => {
+                const ok = filters.every(filter => {
+                    const cell = row.querySelector(`[data-col="${CSS.escape(filter.key)}"]`);
+                    return cell && cell.innerText.toLowerCase().includes(filter.value);
+                });
+                row.style.display = ok ? '' : 'none';
+            });
+        }
+
+        table.querySelectorAll('.column-filter').forEach(input => {
+            input.addEventListener('input', applyColumnFilters);
+        });
+
+        function setupCollapsibleText() {
+            const targets = table.querySelectorAll('.excel-cell, .cell-text');
+            targets.forEach(el => {
+                const text = el.innerText.trim();
+                if (text.length < 80 && el.scrollHeight <= 72) return;
+
+                el.classList.add('collapsible-text', 'is-collapsed');
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'text-toggle';
+                button.textContent = '展開';
+                button.addEventListener('click', () => {
+                    const collapsed = el.classList.toggle('is-collapsed');
+                    button.textContent = collapsed ? '展開' : '收起';
+                });
+                el.insertAdjacentElement('afterend', button);
+            });
+        }
+
+        renderColumnToggles();
+        applyColumnVisibility();
+        setupCollapsibleText();
+    </script>
+</body>
+</html>

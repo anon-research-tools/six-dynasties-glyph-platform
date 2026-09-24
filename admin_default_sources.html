@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>來源字頭總覽 - 管理後台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", Arial, sans-serif;
+            background: #f2f4f8;
+            color: #1f2937;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; font-size: 1.2em; }
+        .header .actions { display: flex; gap: 8px; }
+        .header a, .header button {
+            text-decoration: none;
+            color: #fff;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .content {
+            padding: 18px 24px 24px;
+        }
+        .toolbar {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+            padding: 14px;
+            margin-bottom: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .toolbar input, .toolbar select {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            min-width: 150px;
+        }
+        .toolbar button {
+            border: 1px solid #1f2937;
+            background: #1f2937;
+            color: #fff;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        .toolbar .muted {
+            color: #6b7280;
+            margin-left: auto;
+            font-size: 13px;
+        }
+        .summary-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            width: 100%;
+            margin-top: 2px;
+        }
+        .summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #dbe4f0;
+            background: #f8fafc;
+            color: #334155;
+        }
+        .summary-pill.manual {
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .summary-pill.ai {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .summary-pill.archive {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        }
+        th, td {
+            border-bottom: 1px solid #edf0f5;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px;
+        }
+        th {
+            background: #f8fafc;
+            color: #4b5563;
+            font-weight: 600;
+        }
+        tr:hover { background: #f9fbfd; }
+        .section-row td {
+            background: #eef2ff;
+            color: #1e293b;
+            font-weight: 700;
+            letter-spacing: .02em;
+            border-bottom: 1px solid #dbe4f0;
+            padding: 9px 12px;
+        }
+        .section-row.manual td {
+            background: #ecfdf5;
+            color: #166534;
+        }
+        .section-row.ai-only td {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .section-note {
+            margin-left: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+        }
+        .source {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-width: 380px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: #fff;
+        }
+        .tag.manual { background: #16a34a; }
+        .tag.pro { background: #2563eb; }
+        .tag.fresh { background: #d97706; }
+        .tag.single { background: #7c3aed; }
+        .count-links a {
+            text-decoration: none;
+            color: #1d4ed8;
+            margin-right: 8px;
+        }
+        .count-links a.single-candidate-link {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+        .count-links .disabled-link {
+            color: #9ca3af;
+            margin-right: 8px;
+        }
+        .small {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        .variant-note {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #7c3aed;
+        }
+        .variant-note code {
+            background: #f3e8ff;
+            border: 1px solid #e9d5ff;
+            border-radius: 5px;
+            padding: 1px 5px;
+            color: #5b21b6;
+            font-family: inherit;
+        }
+        .focus-row {
+            background: #fffdf4;
+        }
+        .archived-row {
+            background: #fff7ed;
+            color: #64748b;
+        }
+        .focus-tools {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .star-btn, .memo-btn, .archive-btn {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            color: #334155;
+            border-radius: 999px;
+            padding: 3px 9px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .archive-btn {
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        .archive-btn.active {
+            border-color: #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+            font-weight: 700;
+        }
+        .star-btn.active {
+            border-color: #facc15;
+            background: #fef9c3;
+            color: #854d0e;
+            font-weight: 700;
+        }
+        .memo-btn.has-memo {
+            border-color: #bfdbfe;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+        .memo-text {
+            margin-top: 5px;
+            max-width: 360px;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.5;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 5px 7px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>來源字頭總覽</h1>
+        <div class="actions">
+            <a href="/admin">返回管理後台</a>
+            <a href="/admin/single_candidate_cleaner">單字清洗池</a>
+            <a href="/admin/manuscripts">寫卷編號查詢</a>
+            <button onclick="window.location.href='/'">返回搜索頁</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="toolbar">
+            <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;width:100%;">
+                <label>
+                    關鍵字:
+                    <input type="text" name="q" value="{{ keyword_filter }}" placeholder="輸入字頭關鍵字">
+                </label>
+                <label>
+                    來源:
+                    <select name="source">
+                        <option value="all" {% if source_filter == 'all' %}selected{% endif %}>全部</option>
+                        <option value="manual" {% if source_filter == 'manual' %}selected{% endif %}>人工</option>
+                        <option value="gemini_pro" {% if source_filter == 'gemini_pro' %}selected{% endif %}>Gemini Pro</option>
+                        <option value="gemini_fresh" {% if source_filter == 'gemini_fresh' %}selected{% endif %}>Gemini Fresh</option>
+                        <option value="single_candidate" {% if source_filter == 'single_candidate' %}selected{% endif %}>單字候選</option>
+                        <option value="mixed" {% if source_filter == 'mixed' %}selected{% endif %}>交集/多來源</option>
+                    </select>
+                </label>
+                <label>
+                    重點:
+                    <select name="focus">
+                        <option value="" {% if not focus_filter %}selected{% endif %}>全部</option>
+                        <option value="starred" {% if focus_filter == 'starred' %}selected{% endif %}>只看星標</option>
+                    </select>
+                </label>
+                <label>
+                    狀態:
+                    <select name="archive">
+                        <option value="active" {% if archive_filter == 'active' %}selected{% endif %}>正常字頭</option>
+                        <option value="archived" {% if archive_filter == 'archived' %}selected{% endif %}>封存區</option>
+                        <option value="all" {% if archive_filter == 'all' %}selected{% endif %}>正常+封存</option>
+                    </select>
+                </label>
+                <button type="submit">過濾</button>
+            </form>
+            <span class="muted">共 {{ total_count }} 個字頭</span>
+            <div class="summary-pills">
+                <span class="summary-pill">已匹配進度表 {{ progress_matched_total }}</span>
+                <span class="summary-pill ai">有 Gemini 候選 {{ ai_candidate_total }}</span>
+                <span class="summary-pill manual">人工已篩選 {{ manual_total }}</span>
+                <span class="summary-pill ai">純 Gemini 候選 {{ ai_only_total }}</span>
+                <span class="summary-pill">單字查詢 {{ single_candidate_keyword_total }} 字頭 / {{ single_candidate_item_total }} 筆</span>
+                <span class="summary-pill">星標重點 {{ starred_total }}</span>
+                <span class="summary-pill archive">已封存 {{ archived_total }}</span>
+                <span class="summary-pill">目前顯示 {{ total_count }}</span>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>序號</th>
+                    <th>字頭</th>
+                    <th>出現次數</th>
+                    <th>來源組合</th>
+                    <th>人工</th>
+                    <th>候選總數</th>
+                    <th>Gemini Pro</th>
+                    <th>Gemini Fresh</th>
+                    <th>操作入口</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr class="{% if row.starred %}focus-row{% endif %} {% if row.archived %}archived-row{% endif %}">
+                    <td>
+                        {% if row.progress_rank < 999999999 %}
+                        {{ row.progress_rank }}
+                        {% else %}
+                        <span class="small">未列入</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/defaults?q={{ row.keyword|urlencode }}&source={% if row.source_param == 'single_candidate' %}single_candidate{% else %}all{% endif %}">{{ row.keyword }}</a>
+                        <div class="focus-tools">
+                            <button type="button"
+                                    class="star-btn {% if row.starred %}active{% endif %}"
+                                    data-keyword="{{ row.keyword }}"
+                                    data-starred="{% if row.starred %}1{% else %}0{% endif %}"
+                                    onclick="toggleStar(this)">
+                                {% if row.starred %}★ 重點{% else %}☆ 星標{% endif %}
+                            </button>
+                            <button type="button"
+                                    class="memo-btn {% if row.memo %}has-memo{% endif %}"
+                                    data-keyword="{{ row.keyword }}"
+                                    data-memo="{{ row.memo|e }}"
+                                    onclick="editMemo(this)">
+                                備忘
+                            </button>
+                            <button type="button"
+                                    class="archive-btn {% if row.archived %}active{% endif %}"
+                                    data-keyword="{{ row.keyword }}"
+                                    data-archived="{% if row.archived %}1{% else %}0{% endif %}"
+                                    onclick="toggleArchive(this)">
+                                {% if row.archived %}恢復{% else %}封存{% endif %}
+                            </button>
+                        </div>
+                        {% if row.memo %}
+                        <div class="memo-text">{{ row.memo }}</div>
+                        {% endif %}
+                        {% if row.has_variants %}
+                        <div class="variant-note">
+                            已合併：
+                            {% for variant in row.variants %}
+                            <code>{{ variant }}</code>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.progress_count > 0 %}
+                        <strong>{{ row.progress_count }}</strong>
+                        {% else %}
+                        <span class="small">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="source">
+	                            {% if row.manual %}<span class="tag manual">人工</span>{% endif %}
+	                            {% if row.gemini_pro %}<span class="tag pro">Gemini Pro</span>{% endif %}
+	                            {% if row.gemini_fresh %}<span class="tag fresh">Gemini Fresh</span>{% endif %}
+	                            {% if row.single_candidate_count > 0 %}<span class="tag single">單字候選</span>{% endif %}
+	                        </div>
+	                    </td>
+                    <td>{{ row.manual_count }}</td>
+                    <td><strong>{{ row.ai_candidate_count }}</strong></td>
+                    <td>{{ row.gemini_pro_count }}</td>
+                    <td>{{ row.gemini_fresh_count }}</td>
+                    <td class="count-links">
+                        {% if row.manual_count > 0 %}
+                        <a href="/defaults?q={{ row.keyword|urlencode }}&source=manual">人工結果</a>
+                        {% else %}
+                        <span class="disabled-link">無人工結果</span>
+                        {% endif %}
+                        {% if row.manual_count > 0 or row.ai_candidate_count > 0 %}
+                        <a href="/defaults?q={{ row.keyword|urlencode }}&source=all" target="_blank" rel="noopener noreferrer">{% if row.manual_count > 0 %}人工+候選{% else %}候選全量{% endif %}</a>
+                        {% else %}
+                        <span class="disabled-link">無人工/Gemini候選</span>
+                        {% endif %}
+                        <a href="/defaults?q={{ row.keyword|urlencode }}&source=global_all" target="_blank" rel="noopener noreferrer">整庫查詢</a>
+                        <a href="/admin/ai_coverage_audit?q={{ row.keyword|urlencode }}" target="_blank" rel="noopener noreferrer">AI覆蓋</a>
+                        {% if row.single_candidate_count > 0 %}
+                        <a class="single-candidate-link" href="/defaults?q={{ row.keyword|urlencode }}&source=single_candidate" target="_blank" rel="noopener noreferrer">單字查詢 {{ row.single_candidate_count }}</a>
+                        <a class="single-candidate-link" href="/admin/single_candidate_cleaner?q={{ row.keyword|urlencode }}" target="_blank" rel="noopener noreferrer">清洗</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            {% if not rows %}
+                <tr>
+                    <td colspan="9" class="small">目前沒有符合條件的字頭。可放寬篩選條件後再試。</td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        async function saveKeywordNote(payload) {
+            const resp = await fetch('/admin/defaults_sources/note', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!data.success) {
+                alert(data.error || '保存失敗');
+                return null;
+            }
+            return data.note;
+        }
+
+        async function toggleStar(btn) {
+            const keyword = btn.dataset.keyword;
+            const nextStarred = btn.dataset.starred !== '1';
+            const note = await saveKeywordNote({keyword, starred: nextStarred});
+            if (!note) return;
+            btn.dataset.starred = note.starred ? '1' : '0';
+            btn.classList.toggle('active', note.starred);
+            btn.textContent = note.starred ? '★ 重點' : '☆ 星標';
+            btn.closest('tr')?.classList.toggle('focus-row', note.starred);
+        }
+
+        async function editMemo(btn) {
+            const keyword = btn.dataset.keyword;
+            const oldMemo = btn.dataset.memo || '';
+            const memo = prompt(`為「${keyword}」添加備忘：`, oldMemo);
+            if (memo === null) return;
+            const note = await saveKeywordNote({keyword, memo});
+            if (!note) return;
+            btn.dataset.memo = note.memo || '';
+            btn.classList.toggle('has-memo', Boolean(note.memo));
+
+            let memoBox = btn.closest('td')?.querySelector('.memo-text');
+            if (note.memo) {
+                if (!memoBox) {
+                    memoBox = document.createElement('div');
+                    memoBox.className = 'memo-text';
+                    btn.closest('td')?.insertBefore(memoBox, btn.closest('td')?.querySelector('.variant-note') || null);
+                }
+                memoBox.textContent = note.memo;
+            } else if (memoBox) {
+                memoBox.remove();
+            }
+        }
+
+        async function toggleArchive(btn) {
+            const keyword = btn.dataset.keyword;
+            const nextArchived = btn.dataset.archived !== '1';
+            if (nextArchived && !confirm(`封存「${keyword}」？\n\n封存後會從正常字頭總覽中隱藏，可在「狀態：封存區」中恢復。`)) {
+                return;
+            }
+            const note = await saveKeywordNote({keyword, archived: nextArchived});
+            if (!note) return;
+            btn.dataset.archived = note.archived ? '1' : '0';
+            btn.classList.toggle('active', note.archived);
+            btn.textContent = note.archived ? '恢復' : '封存';
+            btn.closest('tr')?.classList.toggle('archived-row', note.archived);
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

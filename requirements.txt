@@ -1,0 +1,10 @@
+# 生產環境依賴（Aliyun ECS 用 pip install -r requirements.txt）
+# 版本範圍基於本地驗證組合；大版本升級前請測試
+Flask>=3.1,<3.2
+Werkzeug>=3.1,<3.2
+Jinja2>=3.1,<4
+Flask-Compress>=1.15
+gunicorn>=23.0
+pandas>=2.2,<4
+numpy>=1.26,<3
+opencv-python-headless>=4.10,<5

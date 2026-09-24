@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務列表 · 六朝寫經異體字編年字典</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { background: #0b0b10; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang SC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background:
+                radial-gradient(1200px 600px at 15% 0%, rgba(64, 90, 160, .18) 0, transparent 55%),
+                radial-gradient(900px 500px at 95% 5%, rgba(170, 120, 70, .12) 0, transparent 55%),
+                #0b0b10;
+            color: #e6e6ea;
+            min-height: 100vh;
+            padding: 22px 28px 60px;
+            max-width: 1400px;
+            margin: 0 auto;
+            -webkit-font-smoothing: antialiased;
+            font-size: 14.5px;
+            line-height: 1.6;
+            letter-spacing: -0.003em;
+        }
+
+        /* ====== 玻璃膠囊導航 ====== */
+        .top-nav {
+            background: rgba(255, 255, 255, .08);
+            backdrop-filter: blur(26px) saturate(1.5);
+            -webkit-backdrop-filter: blur(26px) saturate(1.5);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 999px;
+            padding: 10px 12px 10px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+            flex-wrap: wrap;
+        }
+        .nav-user {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #d4d4dd;
+            font-size: 13.5px;
+            letter-spacing: .06em;
+        }
+        .nav-user b { color: #fff; font-weight: 600; letter-spacing: .02em; }
+        .user-dot {
+            width: 7px; height: 7px; border-radius: 999px;
+            background: #30d158;
+            box-shadow: 0 0 0 3px rgba(48, 209, 88, .2);
+        }
+        .nav-btn {
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: 0;
+            background: rgba(255, 255, 255, .1);
+            color: #f0f0f5;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .15s ease;
+            font-family: inherit;
+        }
+        .nav-btn:hover { background: rgba(255, 255, 255, .18); color: #fff; }
+        .nav-btn.danger {
+            background: rgba(255, 90, 90, .18);
+            color: #ffb4b4;
+        }
+        .nav-btn.danger:hover {
+            background: rgba(255, 90, 90, .28);
+            color: #fff;
+        }
+
+        /* ====== Hero 標題區 ====== */
+        .hero {
+            text-align: center;
+            padding: 56px 24px 40px;
+        }
+        .hero .kicker {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 999px;
+            background: rgba(170, 200, 255, .12);
+            color: #a8c8ff;
+            font-size: 12px;
+            letter-spacing: .3em;
+            font-weight: 500;
+            font-family: "Noto Serif TC", serif;
+            margin-bottom: 26px;
+            border: 1px solid rgba(170, 200, 255, .15);
+        }
+        .hero h1 {
+            font-family: "Noto Serif TC", "PingFang TC", "Songti SC", serif;
+            font-size: 46px;
+            font-weight: 500;
+            letter-spacing: .03em;
+            line-height: 1.12;
+            color: #fff;
+        }
+        .hero .sub {
+            margin-top: 14px;
+            color: rgba(255, 255, 255, .45);
+            font-size: 14px;
+            letter-spacing: .15em;
+            font-family: "Noto Serif TC", serif;
+        }
+        .hero .accent-bar {
+            display: block;
+            width: 48px; height: 3px;
+            margin: 28px auto 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa 55%, #f0a0c0);
+            box-shadow: 0 0 24px rgba(120, 160, 255, .35);
+        }
+
+        /* ====== 統計面板（浮島）====== */
+        .stats-panel {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 18px;
+            padding: 22px 28px;
+            margin: 24px 0 36px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 2fr;
+            gap: 28px;
+            align-items: center;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .2);
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 20px;
+            border-right: 1px solid rgba(255, 255, 255, .08);
+        }
+        .stat-item:nth-child(4) { border-right: 0; }
+        .stat-label {
+            color: rgba(255, 255, 255, .5);
+            font-size: 11.5px;
+            letter-spacing: .2em;
+            font-family: "Noto Serif TC", serif;
+        }
+        .stat-value {
+            font-family: "Noto Serif TC", serif;
+            font-size: 28px;
+            font-weight: 300;
+            line-height: 1.2;
+            color: #fff;
+            letter-spacing: -0.01em;
+        }
+        .stat-value.total { color: #ffffff; }
+        .stat-value.completed { color: #7dd58c; }
+        .stat-value.pending { color: #ffb780; }
+
+        .progress-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 180px;
+            padding-left: 24px;
+            border-left: 1px solid rgba(255, 255, 255, .08);
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            color: rgba(255, 255, 255, .55);
+            font-size: 11.5px;
+            letter-spacing: .2em;
+            font-family: "Noto Serif TC", serif;
+        }
+        .progress-header b {
+            color: #fff;
+            font-family: "Noto Serif TC", serif;
+            font-weight: 400;
+            font-size: 20px;
+            letter-spacing: 0;
+        }
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, .08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            border-radius: 999px;
+            transition: width .4s ease;
+            box-shadow: 0 0 12px rgba(120, 160, 255, .5);
+        }
+
+        /* ====== 任務區 ====== */
+        .content { }
+
+        .section-title {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            font-family: "Noto Serif TC", serif;
+            font-size: 17px;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: .08em;
+            margin: 0 0 18px 4px;
+        }
+        .section-title .count {
+            color: rgba(255, 255, 255, .45);
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+        .section-title.collapsible { cursor: pointer; user-select: none; transition: color .15s; }
+        .section-title.collapsible:hover { color: #a8c8ff; }
+        .section-title .chev {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .4);
+            margin-left: auto;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin-bottom: 44px;
+        }
+
+        .task-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 18px 10px 14px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all .2s ease;
+            position: relative;
+            aspect-ratio: 1;
+        }
+
+        .task-card.pending {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .1);
+            backdrop-filter: blur(8px);
+        }
+        .task-card.pending:hover {
+            background: rgba(255, 255, 255, .12);
+            border-color: rgba(168, 200, 255, .4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .3), 0 0 0 4px rgba(168, 200, 255, .08);
+        }
+
+        .task-card.completed {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid rgba(255, 255, 255, .05);
+        }
+        .task-card.completed:hover {
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(125, 213, 140, .25);
+        }
+
+        .task-char {
+            font-family: "Noto Serif TC", "Ma Shan Zheng", "Songti SC", serif;
+            font-size: 34px;
+            font-weight: 400;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+        .task-card.pending .task-char { color: #fff; }
+        .task-card.completed .task-char { color: rgba(255, 255, 255, .35); }
+
+        .task-freq {
+            font-size: 11px;
+            margin-top: 10px;
+            letter-spacing: .06em;
+            font-family: "Noto Serif TC", serif;
+        }
+        .task-card.pending .task-freq { color: rgba(255, 255, 255, .5); }
+        .task-card.completed .task-freq { color: rgba(255, 255, 255, .25); }
+
+        .task-status-icon {
+            position: absolute;
+            top: 8px; right: 10px;
+            font-size: 12px;
+            color: #7dd58c;
+        }
+        .task-card.pending .task-status-icon { display: none; }
+
+        .empty-message {
+            color: rgba(255, 255, 255, .45);
+            font-size: 14px;
+            padding: 40px 0;
+            text-align: center;
+            font-family: "Noto Serif TC", serif;
+            letter-spacing: .1em;
+        }
+
+        /* 演示模式 banner */
+        .demo-banner {
+            background: rgba(251, 191, 36, .12);
+            border: 1px solid rgba(251, 191, 36, .3);
+            color: #fcd34d;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 13px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            letter-spacing: .05em;
+        }
+        .demo-banner a { color: #fcd34d; text-decoration: underline; }
+        .demo-intro {
+            max-width: 900px;
+            margin: 0 auto 30px;
+            padding: 22px 26px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.85;
+            color: rgba(255, 255, 255, .8);
+        }
+        .demo-intro strong { color: #fff; font-size: 16px; }
+        .demo-intro ol { margin: 10px 0 0 20px; }
+
+        @media (max-width: 880px) {
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px 24px;
+            }
+            .stat-item { border-right: 0 !important; padding-right: 0; }
+            .progress-box {
+                grid-column: span 2;
+                padding-left: 0;
+                border-left: 0;
+                padding-top: 16px;
+                border-top: 1px solid rgba(255, 255, 255, .08);
+            }
+            .hero h1 { font-size: 34px; }
+            .top-nav { padding: 10px 14px; }
+        }
+    </style>
+</head>
+<body>
+    {% if is_demo_mode %}
+    <div class="demo-banner" style="position: sticky; top: 0; z-index: 1000;">
+        <strong>演示模式</strong>　·　您的操作不會實際保存　·　有興趣參與？請透過論文作者聯繫　·　<a href="/logout">退出</a>
+    </div>
+    <div class="demo-intro">
+        <strong>歡迎體驗「六朝寫經異體字典」</strong><br>
+        這是一個協作式字圖審核系統。作為真實學生，你會：
+        <ol>
+            <li>收到一批需要處理的字（下方列表）</li>
+            <li>逐個寫卷瀏覽字圖，挑選代表性最好的一張標為「選定」</li>
+            <li>可以標記殘損、誤入、字形分類，寫備註</li>
+            <li>完成後點「完成此字，下一個」</li>
+        </ol>
+        請點擊下方任意一個字，體驗完整流程。
+    </div>
+    {% endif %}
+
+    <nav class="top-nav">
+        <div class="nav-user">
+            <span class="user-dot"></span>當前用戶　<b>{{ current_user }}</b>
+        </div>
+        <div>
+            <button class="nav-btn danger" onclick="logout()">登出</button>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="kicker">任務一覽</div>
+        <h1>六朝寫經異體字編年字典</h1>
+        <div class="sub">敦煌 · 六朝 · 寫經殘卷</div>
+        <span class="accent-bar"></span>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat-item">
+            <span class="stat-label">總任務</span>
+            <span class="stat-value total">{{ stats.total }}<small style="font-size:14px;opacity:.55;margin-left:4px;">字</small></span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">已完成</span>
+            <span class="stat-value completed">{{ stats.completed }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">未完成</span>
+            <span class="stat-value pending">{{ stats.pending }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">總工作量</span>
+            <span class="stat-value total" style="font-size:22px;">{{ stats.total_freq_display }}</span>
+        </div>
+        <div class="progress-box">
+            <div class="progress-header">
+                <span>校勘進度</span>
+                <b>{{ stats.percent }}%</b>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ stats.percent }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        {% if pending_tasks %}
+        <div class="section-title">未完成 <span class="count">{{ pending_tasks|length }} 字</span></div>
+        <div class="task-grid">
+            {% for task in pending_tasks %}
+            <a class="task-card pending" href="/go/{{ task.token }}" title="{{ task.keyword }} · {{ task.frequency }} 次">
+                <span class="task-char">{{ task.keyword }}</span>
+                <span class="task-freq">{{ task.frequency }} 次</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if completed_tasks %}
+        <div class="section-title collapsible" onclick="toggleCompleted(this)">
+            已完成 <span class="count">{{ completed_tasks|length }} 字</span>
+            <span class="chev">▶</span>
+        </div>
+        <div class="task-grid" style="display:none;" id="completed-grid">
+            {% for task in completed_tasks %}
+            <a class="task-card completed" href="/go/{{ task.token }}" title="{{ task.keyword }} · 已完成">
+                <span class="task-char">{{ task.keyword }}</span>
+                <span class="task-freq">{{ task.frequency }} 次</span>
+                <span class="task-status-icon">✓</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not pending_tasks and not completed_tasks %}
+        <div class="empty-message">暫無分配的任務　·　請聯繫管理員</div>
+        {% endif %}
+    </div>
+
+    <script>
+    function logout() {
+        fetch('/logout').then(() => { window.location.href = '/login'; });
+    }
+
+    function toggleCompleted(el) {
+        const grid = document.getElementById('completed-grid');
+        const chev = el.querySelector('.chev');
+        const isShown = grid.style.display !== 'none';
+        grid.style.display = isShown ? 'none' : 'grid';
+        chev.textContent = isShown ? '▶' : '▼';
+    }
+
+    // 行為監控（交互驅動）
+    (function() {
+        let hasInteraction = false;
+        ['click','scroll','mousemove','keydown'].forEach(evt => {
+            document.addEventListener(evt, () => { hasInteraction = true; }, {passive:true});
+        });
+        setInterval(() => {
+            if (hasInteraction && !document.hidden) {
+                fetch('/heartbeat', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({page:'dashboard', clicks:1})
+                }).catch(() => {});
+            }
+            hasInteraction = false;
+        }, 60000);
+    })();
+    </script>
+</body>
+</html>

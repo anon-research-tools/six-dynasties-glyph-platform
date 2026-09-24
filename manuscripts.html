@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寫卷瀏覽 - 六朝寫經異體字典</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: #eef1f5;
+            color: #172033;
+        }
+        .topbar {
+            background: #192234;
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .topbar h1 { margin: 0; font-size: 20px; letter-spacing: 0; }
+        .topbar nav { display: flex; gap: 8px; flex-wrap: wrap; }
+        .topbar a {
+            color: #fff;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,.22);
+            background: rgba(255,255,255,.1);
+            border-radius: 6px;
+            padding: 7px 12px;
+            font-size: 13px;
+        }
+        .wrap { padding: 18px 24px 28px; }
+        .toolbar {
+            background: #fff;
+            border: 1px solid #dde4ee;
+            border-radius: 8px;
+            padding: 14px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+        }
+        .search-form { display: flex; gap: 8px; min-width: 0; }
+        .search-form input {
+            width: min(520px, 100%);
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 9px 11px;
+            font-size: 14px;
+        }
+        .search-form button, .search-form a {
+            border: 1px solid #1f2937;
+            background: #1f2937;
+            color: #fff;
+            border-radius: 6px;
+            padding: 9px 13px;
+            font-size: 14px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .search-form a {
+            background: #fff;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+        .stats {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .stat {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 6px 10px;
+            color: #475569;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .table-wrap {
+            margin-top: 14px;
+            background: #fff;
+            border: 1px solid #dde4ee;
+            border-radius: 8px;
+            overflow: auto;
+            max-height: calc(100vh - 172px);
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 1180px; }
+        th, td {
+            padding: 11px 12px;
+            border-bottom: 1px solid #e6edf5;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8fafc;
+            color: #526071;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        tr:hover { background: #f8fbff; }
+        tr.catalog-only { background: #fffbeb; color: #6b5a20; }
+        .code { font-weight: 700; color: #111827; white-space: nowrap; }
+        .muted { color: #64748b; font-size: 12px; line-height: 1.55; }
+        .title-cell { max-width: 260px; line-height: 1.55; overflow-wrap: anywhere; }
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            white-space: nowrap;
+        }
+        .badge.ok { color: #166534; background: #dcfce7; border-color: #86efac; }
+        .badge.warn { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+        .actions { display: flex; gap: 7px; flex-wrap: wrap; }
+        .actions a {
+            text-decoration: none;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 6px 9px;
+            color: #1d4ed8;
+            background: #fff;
+            white-space: nowrap;
+        }
+        .actions a.primary {
+            background: #1d4ed8;
+            color: #fff;
+            border-color: #1d4ed8;
+        }
+        @media (max-width: 760px) {
+            .wrap { padding: 14px; }
+            .toolbar { grid-template-columns: 1fr; }
+            .search-form { flex-wrap: wrap; }
+            .stats { justify-content: flex-start; }
+            .table-wrap { max-height: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <h1>寫卷瀏覽</h1>
+        <nav>
+            <a href="/admin">管理後台</a>
+            <a href="/admin/manuscripts">寫卷編號查詢</a>
+            <a href="/">字頭搜索</a>
+            <a href="/defaults">已篩選字圖</a>
+        </nav>
+    </header>
+
+    <main class="wrap">
+        <section class="toolbar">
+            <form class="search-form" method="get" action="/manuscripts">
+                <input name="q" value="{{ query }}" placeholder="搜索 DH 編號、卷號、題名、館藏地、紀年或圖片名">
+                <button type="submit">查詢</button>
+                {% if query %}
+                <a href="/manuscripts">清空</a>
+                {% endif %}
+            </form>
+            <div class="stats">
+                <span class="stat">DB 寫卷 {{ total_codes }}</span>
+                <span class="stat">目錄 {{ total_catalog }}</span>
+                <span class="stat">當前 {{ total_results }}</span>
+                <span class="stat">已對目錄 {{ matched_count }}</span>
+                <span class="stat">待補找 {{ catalog_only_count }}</span>
+                <span class="stat">字圖 {{ total_char_count }}</span>
+                <span class="stat">頁次 {{ total_page_count }}</span>
+            </div>
+        </section>
+
+        <section class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>出版號</th>
+                        <th>寫卷碼</th>
+                        <th>題名 / 紀年</th>
+                        <th>館藏 / 卷號</th>
+                        <th>DB 狀態</th>
+                        <th>樣例</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    {% set catalog = row.catalog or {} %}
+                    <tr class="{% if row.catalog_only %}catalog-only{% endif %}">
+                        <td>
+                            <div class="code">{{ row.publication_id or '-' }}</div>
+                            <div class="muted">{{ row.publication_label or '' }}</div>
+                        </td>
+                        <td>
+                            <div class="code">{{ row.other_info_code or '目錄行 #' ~ catalog.get('_row_index', '-') }}</div>
+                            <div class="muted">紀年提示：{{ row.year_hint or catalog.get('西元紀') or '-' }}</div>
+                            {% if row.marker_summary %}<div class="muted">標記：{{ row.marker_summary }}</div>{% endif %}
+                        </td>
+                        <td class="title-cell">
+                            <div>{{ catalog.get('題名') or '-' }}</div>
+                            <div class="muted">西元紀：{{ catalog.get('西元紀') or row.year_hint or '-' }}</div>
+                            {% if catalog.get('原卷紀年') %}
+                            <div class="muted">{{ catalog.get('原卷紀年') }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="title-cell">
+                            <div>{{ catalog.get('館藏地') or '-' }}</div>
+                            <div class="muted">{{ catalog.get('卷號') or '-' }}</div>
+                        </td>
+                        <td>
+                            {% if row.catalog_only %}
+                            <span class="badge warn">目錄待補找</span>
+                            <div class="muted">尚未匹配到 DB 寫卷碼</div>
+                            {% else %}
+                            <span class="badge ok">已入庫</span>
+                            <div class="muted">字圖 {{ row.char_count }}；頁數 {{ row.page_count }}</div>
+                            <div class="muted">頁號 {{ row.min_page }} - {{ row.max_page }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="title-cell">
+                            <div>{{ row.sample_img_name or '-' }}</div>
+                            <div class="muted">{{ row.sample_other_info or '' }}</div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                {% if row.other_info_code %}
+                                <a class="primary" href="/manuscripts/{{ row.other_info_code|urlencode }}">進入寫卷</a>
+                                <a href="/?q={{ row.other_info_code|urlencode }}&column=other_info">全庫搜索</a>
+                                <a href="/defaults?search_value={{ row.other_info_code|urlencode }}&targets=other_info&source=all">已篩選</a>
+                                {% else %}
+                                <span class="muted">待入庫後可瀏覽</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not rows %}
+                    <tr><td colspan="7" class="muted">沒有符合條件的寫卷。</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>

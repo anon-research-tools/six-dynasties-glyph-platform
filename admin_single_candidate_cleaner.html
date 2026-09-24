@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單字候選清洗池 - 管理後台</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans TC", "PingFang TC", Arial, sans-serif;
+            background: #f4f6fa;
+            color: #172033;
+        }
+        .topbar {
+            height: 58px;
+            background: #111827;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            gap: 14px;
+        }
+        .topbar h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 0;
+            white-space: nowrap;
+        }
+        .topbar .links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .topbar a, .topbar button {
+            color: #fff;
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,.2);
+            background: rgba(255,255,255,.12);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .layout {
+            display: grid;
+            grid-template-columns: 64px 1fr;
+            min-height: calc(100vh - 58px);
+        }
+        .sidebar {
+            background: #fff;
+            border-right: 1px solid #e2e8f0;
+            height: calc(100vh - 58px);
+            position: sticky;
+            top: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .side-summary {
+            padding: 6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .summary-grid {
+            display: none;
+        }
+        .summary-cell {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 5px;
+        }
+        .summary-cell span {
+            display: block;
+            color: #64748b;
+            font-size: 10px;
+            margin-bottom: 2px;
+        }
+        .summary-cell strong {
+            font-size: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+        .side-filter {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 5px 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .keyword-list {
+            overflow: auto;
+            padding: 5px;
+        }
+        .kw-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #1f2937;
+            padding: 6px 4px;
+            min-height: 34px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+        }
+        .kw-link:hover { background: #f8fafc; }
+        .kw-link.active {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .kw-char {
+            font-size: 21px;
+            font-weight: 750;
+            text-align: center;
+            line-height: 1;
+        }
+        .kw-meta {
+            display: none;
+        }
+        .kw-meta b { color: #111827; }
+        .main {
+            padding: 12px 14px 28px;
+        }
+        .toolbar {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .title-block {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .title-block .current-char {
+            font-size: 32px;
+            line-height: 1;
+            font-weight: 800;
+        }
+        .title-block .muted {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .status-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .pill {
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid #dbe4f0;
+            background: #f8fafc;
+            color: #334155;
+        }
+        .pill.keep {
+            background: #ecfdf5;
+            border-color: #bbf7d0;
+            color: #047857;
+        }
+        .pill.discard {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #c2410c;
+        }
+        .view-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .view-controls button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: #334155;
+            font: inherit;
+            font-size: 13px;
+        }
+        .view-controls button.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+            gap: 8px;
+        }
+        .glyph-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .glyph-card.cbeta-mismatch {
+            border-color: #0b63ff;
+            box-shadow: inset 0 0 0 3px #0b63ff;
+        }
+        .glyph-card.discarded {
+            opacity: .58;
+            background: #f8fafc;
+        }
+        .glyph-card.discarded.cbeta-mismatch {
+            opacity: .72;
+            box-shadow: inset 0 0 0 3px #0b63ff;
+        }
+        .thumb {
+            height: 96px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border-bottom: 1px solid #eef2f7;
+            cursor: zoom-in;
+        }
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+        }
+        .card-body {
+            padding: 5px 6px 6px;
+            font-size: 11px;
+            line-height: 1.25;
+        }
+        .compact-meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px;
+            min-width: 0;
+            color: #475569;
+            white-space: nowrap;
+            overflow: visible;
+            font-size: 11px;
+        }
+        .compact-meta span {
+            min-width: auto;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
+        }
+        .compact-meta b {
+            color: #64748b;
+            font-weight: 600;
+        }
+        .compact-meta .ms {
+            color: #334155;
+            font-weight: 700;
+            flex: 0 0 auto;
+            max-width: none;
+        }
+        .compact-meta .value {
+            font-weight: 650;
+            min-width: auto;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
+        }
+        .discard-btn {
+            width: 100%;
+            margin-top: 5px;
+            border: 1px solid #f97316;
+            background: #fff7ed;
+            color: #c2410c;
+            border-radius: 6px;
+            padding: 4px 6px;
+            cursor: pointer;
+            font-weight: 750;
+            font-size: 11px;
+        }
+        .note-flag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 999px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            font-size: 10px;
+            font-weight: 800;
+        }
+        .note-flag.hidden {
+            display: none;
+        }
+        .keyword-section {
+            scroll-margin-top: 74px;
+            margin-bottom: 18px;
+        }
+        .section-head {
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(244,246,250,.94);
+            backdrop-filter: blur(8px);
+            padding: 8px 0;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section-head h2 {
+            margin: 0;
+            font-size: 22px;
+            line-height: 1;
+        }
+        .section-stats {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .glyph-card.discarded .discard-btn {
+            background: #c2410c;
+            border-color: #c2410c;
+            color: #fff;
+        }
+        .empty {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 26px;
+            color: #64748b;
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,.84);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 24px;
+        }
+        .modal.open { display: flex; }
+        .modal-panel {
+            width: min(1200px, 96vw);
+            height: min(860px, 92vh);
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-bar {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            color: #e5e7eb;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .modal-actions a, .modal-actions button, .modal-tools button {
+            color: #fff;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 6px;
+            padding: 5px 9px;
+            text-decoration: none;
+            cursor: pointer;
+            font: inherit;
+        }
+        .modal-body {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+            background: #0b1020;
+            padding: 18px;
+            text-align: center;
+        }
+        .modal-body.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e5e7eb;
+        }
+        .modal-body img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+            vertical-align: top;
+            transition: width .22s ease;
+            cursor: zoom-in;
+        }
+        .modal-body img.zoomed {
+            max-width: none;
+            max-height: none;
+            cursor: zoom-out;
+        }
+        .modal-tools {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .note-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,.42);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            padding: 18px;
+        }
+        .note-modal.open { display: flex; }
+        .note-panel {
+            width: min(520px, 92vw);
+            background: #fff;
+            border: 1px solid #dbe4f0;
+            border-radius: 10px;
+            box-shadow: 0 22px 70px rgba(15,23,42,.28);
+            overflow: hidden;
+        }
+        .note-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+        .note-head strong { font-size: 14px; }
+        .note-head button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 6px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .note-body { padding: 12px; }
+        .note-body textarea {
+            width: 100%;
+            min-height: 138px;
+            resize: vertical;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            padding: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .note-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 0 12px 12px;
+        }
+        .note-actions button {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            border-radius: 7px;
+            padding: 7px 12px;
+            cursor: pointer;
+            font: inherit;
+        }
+        .note-actions .primary {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+            font-weight: 700;
+        }
+        @media (max-width: 860px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar {
+                position: static;
+                height: 260px;
+                border-right: 0;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .topbar { height: auto; padding: 12px; align-items: flex-start; flex-direction: column; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>單字候選清洗池</h1>
+        <div class="links">
+            <button type="button" onclick="manualBackupCleaner()">立即備份</button>
+            <a href="/admin/defaults_sources">來源字頭總覽</a>
+            <a href="/admin/single_candidates">單字候選舊頁</a>
+            <a href="/admin">管理後台</a>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="side-summary">
+                <input class="side-filter" id="kwFilter" type="search" placeholder="過濾字頭">
+                <span id="overallKept" style="display:none">{{ overall_kept }}</span>
+                <span id="overallDiscarded" style="display:none">{{ overall_discarded }}</span>
+            </div>
+            <nav class="keyword-list" id="keywordList">
+                {% for item in keyword_stats %}
+                <a class="kw-link {% if item.keyword == selected_keyword %}active{% endif %}"
+                   href="#kw-{{ item.keyword }}"
+                   data-keyword="{{ item.keyword }}"
+                   data-total="{{ item.total }}"
+                   data-discarded="{{ item.discarded }}"
+                   title="{{ item.keyword }}：總 {{ item.total }}，留 {{ item.kept }}，棄 {{ item.discarded }}">
+                    <span class="kw-char">{{ item.keyword }}</span>
+                    <span class="kw-kept" style="display:none">{{ item.kept }}</span>
+                    <span class="kw-discarded" style="display:none">{{ item.discarded }}</span>
+                </a>
+                {% endfor %}
+            </nav>
+        </aside>
+
+        <main class="main">
+            <section class="toolbar">
+                <div class="title-block">
+                    <span class="current-char">{{ selected_keyword or '—' }}</span>
+                    <span class="muted">按寫卷編號排序；點擊字圖查看原圖。</span>
+                </div>
+                <div class="status-pills">
+                    <span class="pill">總數 <b id="currentTotal">{{ current_total }}</b></span>
+                    <span class="pill keep">保留候選 <b id="currentKept">{{ current_kept }}</b></span>
+                    <span class="pill discard">舍棄 <b id="currentDiscarded">{{ current_discarded }}</b></span>
+                </div>
+            </section>
+
+            <div class="view-controls">
+                <button type="button" class="active" data-view="all">全部</button>
+                <button type="button" data-view="kept">只看未舍棄</button>
+                <button type="button" data-view="discarded">只看已舍棄</button>
+            </div>
+
+            <div id="flowContainer"></div>
+            <div class="empty" id="loadingSentinel">載入中...</div>
+        </main>
+    </div>
+
+    <div class="modal" id="originalModal" onclick="closeOriginalImage(event)">
+        <div class="modal-panel" onclick="event.stopPropagation()">
+            <div class="modal-bar">
+                <span id="modalTitle">原圖</span>
+                <div class="modal-actions">
+                    <div class="modal-tools">
+                        <button type="button" onclick="zoomOriginalImage(1.18)">放大</button>
+                        <button type="button" onclick="zoomOriginalImage(0.85)">縮小</button>
+                        <button type="button" onclick="focusOriginalTarget(true)">定位</button>
+                        <button type="button" onclick="resetOriginalZoom()">重置</button>
+                    </div>
+                    <a id="modalOpenLink" href="#" target="_blank" rel="noopener noreferrer">新窗口</a>
+                    <button type="button" onclick="hideOriginalModal()">關閉</button>
+                </div>
+            </div>
+            <div class="modal-body loading" id="modalBody">載入中...</div>
+        </div>
+    </div>
+
+    <div class="note-modal" id="noteModal" onclick="closeNoteModal(event)">
+        <div class="note-panel" onclick="event.stopPropagation()">
+            <div class="note-head">
+                <strong id="noteTitle">字圖備註</strong>
+                <button type="button" onclick="hideNoteModal()">關閉</button>
+            </div>
+            <div class="note-body">
+                <textarea id="noteText" placeholder="輸入這張字圖的備註..."></textarea>
+            </div>
+            <div class="note-actions">
+                <button type="button" onclick="clearCurrentNote()">清空</button>
+                <button type="button" class="primary" onclick="saveCurrentNote()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const selectedKeyword = {{ selected_keyword|tojson }};
+        const keywordOrder = {{ keyword_order|tojson }};
+        const initialIndex = Number({{ initial_index }});
+        let overallDiscarded = Number({{ overall_discarded }});
+        const overallTotal = Number({{ overall_total }});
+        let currentView = 'all';
+        let modalObjectUrl = null;
+        let currentZoom = 1;
+        let activeKeyword = selectedKeyword;
+        let currentNoteCard = null;
+        let nextStart = initialIndex || 0;
+        let loadingSections = false;
+        let hasMoreSections = true;
+        const chunkSize = 20;
+        const loadedKeywords = new Set();
+        let sectionObserver = null;
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function keywordIndex(keyword) {
+            const index = keywordOrder.indexOf(keyword);
+            return index >= 0 ? index : 999999;
+        }
+
+        function insertSectionSorted(section) {
+            const container = document.getElementById('flowContainer');
+            const index = Number(section.dataset.index || 0);
+            const next = Array.from(container.querySelectorAll('.keyword-section'))
+                .find(existing => Number(existing.dataset.index || 0) > index);
+            container.insertBefore(section, next || null);
+        }
+
+        function observeSection(section) {
+            if (sectionObserver) sectionObserver.observe(section);
+        }
+
+        function shortManuscript(value) {
+            const raw = String(value || '');
+            const match = raw.match(/^DH_(\d+)(?:_|$)/);
+            return match ? String(Number(match[1])) : raw;
+        }
+
+        function renderCard(row) {
+            const discarded = row.discarded ? '1' : '0';
+            const mismatch = row.cbeta_mismatch ? '1' : '0';
+            const className = [
+                'glyph-card',
+                row.discarded ? 'discarded' : '',
+                row.cbeta_mismatch ? 'cbeta-mismatch' : ''
+            ].filter(Boolean).join(' ');
+            const displayUrl = row.thumb_url || row.img_url || '';
+            const image = displayUrl
+                ? `<img src="${escapeHtml(displayUrl)}" alt="字圖 ${escapeHtml(row.keyword)}" loading="lazy">`
+                : '<span>無圖</span>';
+            const manuscript = row.other_info_code || row.other_info || '';
+            const note = row.note || '';
+            const cbetaTitle = row.cbeta_mismatch ? '；CBETA與字頭不一致或缺失' : '';
+            return `
+                <article class="${className}" data-char-id="${escapeHtml(row.char_id)}" data-keyword="${escapeHtml(row.keyword)}" data-discarded="${discarded}" data-cbeta-mismatch="${mismatch}" data-note="${escapeHtml(note)}" oncontextmenu="openNoteModal(event, this)">
+                    <div class="thumb" onclick="showOriginalImage('${escapeHtml(row.char_id)}')">${image}</div>
+                    <div class="card-body">
+                        <div class="compact-meta" title="${escapeHtml(manuscript)}；CBETA: ${escapeHtml(row.cmp_txt || '-')}；人工: ${escapeHtml(row.txt || '-')}${cbetaTitle}">
+                            <span class="ms">${escapeHtml(shortManuscript(manuscript))}</span>
+                            <span><b>（C）</b><span class="value">${escapeHtml(row.cmp_txt || '-')}</span></span>
+                            <span><b>（人）</b><span class="value">${escapeHtml(row.txt || '-')}</span></span>
+                            <span class="note-flag ${note.trim() ? '' : 'hidden'}" title="有備註">備</span>
+                        </div>
+                        <button type="button" class="discard-btn" onclick="toggleDiscard(this)">${row.discarded ? '已舍棄' : '舍棄'}</button>
+                    </div>
+                </article>`;
+        }
+
+        function renderGroup(group) {
+            if (loadedKeywords.has(group.keyword)) return;
+            loadedKeywords.add(group.keyword);
+            const stats = group.stats || {};
+            const section = document.createElement('section');
+            section.className = 'keyword-section';
+            section.id = `kw-${group.keyword}`;
+            section.dataset.keyword = group.keyword;
+            section.dataset.index = String(keywordIndex(group.keyword));
+            section.innerHTML = `
+                <div class="section-head">
+                    <h2>${escapeHtml(group.keyword)}</h2>
+                    <div class="section-stats">
+                        <span class="pill">總數 <b class="section-total">${escapeHtml(stats.total ?? group.rows.length)}</b></span>
+                        <span class="pill keep">保留 <b class="section-kept">${escapeHtml(stats.kept ?? '')}</b></span>
+                        <span class="pill discard">舍棄 <b class="section-discarded">${escapeHtml(stats.discarded ?? '')}</b></span>
+                    </div>
+                </div>
+                <div class="grid" data-keyword="${escapeHtml(group.keyword)}">
+                    ${group.rows.map(renderCard).join('')}
+                </div>`;
+            insertSectionSorted(section);
+            observeSection(section);
+        }
+
+        function isSentinelNearViewport() {
+            const sentinel = document.getElementById('loadingSentinel');
+            if (!sentinel) return false;
+            const rect = sentinel.getBoundingClientRect();
+            const margin = 700;
+            return rect.top <= window.innerHeight + margin && rect.bottom >= -margin;
+        }
+
+        function triggerLoadMoreIfNeeded() {
+            if (!hasMoreSections || loadingSections || !isSentinelNearViewport()) return;
+            window.setTimeout(() => {
+                if (hasMoreSections && !loadingSections && isSentinelNearViewport()) {
+                    loadSections(nextStart);
+                }
+            }, 80);
+        }
+
+        async function loadSections(start, {scrollToKeyword = ''} = {}) {
+            if (loadingSections) return;
+            loadingSections = true;
+            const sentinel = document.getElementById('loadingSentinel');
+            sentinel.textContent = '載入中...';
+            try {
+                const resp = await fetch(`/admin/single_candidate_cleaner/sections?start=${encodeURIComponent(start)}&limit=${chunkSize}`);
+                const data = await resp.json();
+                if (!resp.ok || !data.success) throw new Error(data.error || '載入失敗');
+                data.groups.forEach(renderGroup);
+                if (start === nextStart) {
+                    nextStart = data.next_start;
+                    hasMoreSections = data.has_more;
+                }
+                sentinel.textContent = hasMoreSections ? '繼續下拉載入更多' : '已載入到最後';
+                applyView();
+                if (scrollToKeyword) {
+                    const target = document.querySelector(`.keyword-section[data-keyword="${CSS.escape(scrollToKeyword)}"]`);
+                    if (target) {
+                        target.scrollIntoView({behavior: 'smooth', block: 'start'});
+                        setActiveKeyword(scrollToKeyword);
+                    }
+                }
+            } catch (err) {
+                sentinel.textContent = err.message || '載入失敗';
+            } finally {
+                loadingSections = false;
+                triggerLoadMoreIfNeeded();
+            }
+        }
+
+        async function ensureKeywordLoaded(keyword) {
+            if (loadedKeywords.has(keyword)) return true;
+            const index = keywordOrder.indexOf(keyword);
+            if (index < 0) return false;
+            await loadSections(index, {scrollToKeyword: keyword});
+            return loadedKeywords.has(keyword);
+        }
+
+        async function manualBackupCleaner() {
+            try {
+                const resp = await fetch('/admin/single_candidate_cleaner/backup', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || '備份失敗');
+                }
+                alert(`已備份：\n${data.path}`);
+            } catch (err) {
+                alert(err.message || '備份失敗');
+            }
+        }
+
+        function setActiveKeyword(keyword, scrollSidebar = true) {
+            if (!keyword) return;
+            activeKeyword = keyword;
+            const link = document.querySelector(`.kw-link[data-keyword="${CSS.escape(keyword)}"]`);
+            const total = Number(link?.dataset.total || 0);
+            const discarded = Number(link?.dataset.discarded || 0);
+            document.querySelector('.current-char').textContent = keyword;
+            document.getElementById('currentTotal').textContent = total;
+            document.getElementById('currentDiscarded').textContent = discarded;
+            document.getElementById('currentKept').textContent = Math.max(total - discarded, 0);
+            document.querySelectorAll('.kw-link').forEach(item => item.classList.toggle('active', item === link));
+            if (scrollSidebar && link) {
+                link.scrollIntoView({block: 'nearest'});
+            }
+        }
+
+        function updateOverallCounters() {
+            document.getElementById('overallDiscarded').textContent = overallDiscarded;
+            document.getElementById('overallKept').textContent = Math.max(overallTotal - overallDiscarded, 0);
+        }
+
+        function updateKeywordCounters(keyword, delta) {
+            const link = document.querySelector(`.kw-link[data-keyword="${CSS.escape(keyword)}"]`);
+            const section = document.querySelector(`.keyword-section[data-keyword="${CSS.escape(keyword)}"]`);
+            if (!link || !section) return;
+            const total = Number(link.dataset.total || 0);
+            const nextDiscarded = Math.max(0, Number(link.dataset.discarded || 0) + delta);
+            link.dataset.discarded = String(nextDiscarded);
+            const kept = Math.max(total - nextDiscarded, 0);
+            const discardedNode = link.querySelector('.kw-discarded');
+            const keptNode = link.querySelector('.kw-kept');
+            if (discardedNode) discardedNode.textContent = nextDiscarded;
+            if (keptNode) keptNode.textContent = kept;
+            link.title = `${keyword}：總 ${total}，留 ${kept}，棄 ${nextDiscarded}`;
+            const sectionDiscarded = section.querySelector('.section-discarded');
+            const sectionKept = section.querySelector('.section-kept');
+            if (sectionDiscarded) sectionDiscarded.textContent = nextDiscarded;
+            if (sectionKept) sectionKept.textContent = kept;
+            if (keyword === activeKeyword) {
+                setActiveKeyword(keyword, false);
+            }
+        }
+
+        function applyView() {
+            document.querySelectorAll('.keyword-section').forEach(section => {
+                let visibleCount = 0;
+                section.querySelectorAll('.glyph-card').forEach(card => {
+                    const discarded = card.dataset.discarded === '1';
+                    let show = true;
+                    if (currentView === 'kept') show = !discarded;
+                    if (currentView === 'discarded') show = discarded;
+                    card.style.display = show ? '' : 'none';
+                    if (show) visibleCount += 1;
+                });
+                section.style.display = visibleCount ? '' : 'none';
+            });
+        }
+
+        function setupSectionObserver() {
+            sectionObserver = new IntersectionObserver(entries => {
+                const visible = entries
+                    .filter(entry => entry.isIntersecting)
+                    .sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
+                if (visible[0]) {
+                    setActiveKeyword(visible[0].target.dataset.keyword);
+                }
+            }, {root: null, rootMargin: '-72px 0px -72% 0px', threshold: [0, .02, .08]});
+            document.querySelectorAll('.keyword-section').forEach(section => observeSection(section));
+        }
+
+        document.querySelectorAll('.kw-link').forEach(link => {
+            link.addEventListener('click', async event => {
+                event.preventDefault();
+                const keyword = link.dataset.keyword;
+                await ensureKeywordLoaded(keyword);
+                const target = document.querySelector(`.keyword-section[data-keyword="${CSS.escape(keyword)}"]`);
+                if (target) {
+                    target.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    setActiveKeyword(keyword);
+                }
+            });
+        });
+
+        document.querySelectorAll('.view-controls button').forEach(button => {
+            button.addEventListener('click', () => {
+                currentView = button.dataset.view;
+                document.querySelectorAll('.view-controls button').forEach(btn => btn.classList.toggle('active', btn === button));
+                applyView();
+            });
+        });
+
+        document.getElementById('kwFilter').addEventListener('input', event => {
+            const q = event.target.value.trim();
+            document.querySelectorAll('.kw-link').forEach(link => {
+                link.style.display = !q || link.dataset.keyword.includes(q) ? '' : 'none';
+            });
+        });
+
+        async function toggleDiscard(button) {
+            const card = button.closest('.glyph-card');
+            const keyword = card.dataset.keyword;
+            const charId = card.dataset.charId;
+            const nextDiscarded = card.dataset.discarded !== '1';
+            button.disabled = true;
+            const oldText = button.textContent;
+            button.textContent = '保存中';
+            try {
+                const resp = await fetch('/admin/single_candidate_cleaner/discard', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({keyword, char_id: charId, discarded: nextDiscarded})
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || '保存失敗');
+                }
+                const wasDiscarded = card.dataset.discarded === '1';
+                card.dataset.discarded = nextDiscarded ? '1' : '0';
+                card.classList.toggle('discarded', nextDiscarded);
+                button.textContent = nextDiscarded ? '已舍棄' : '舍棄';
+                if (nextDiscarded !== wasDiscarded) {
+                    const delta = nextDiscarded ? 1 : -1;
+                    overallDiscarded += delta;
+                    updateKeywordCounters(keyword, delta);
+                    updateOverallCounters();
+                }
+                applyView();
+            } catch (err) {
+                button.textContent = oldText;
+                alert(err.message || '保存失敗');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function openNoteModal(event, card) {
+            event.preventDefault();
+            currentNoteCard = card;
+            const keyword = card.dataset.keyword || '';
+            const charId = card.dataset.charId || '';
+            document.getElementById('noteTitle').textContent = `備註 ${keyword} / ${charId}`;
+            document.getElementById('noteText').value = card.dataset.note || '';
+            document.getElementById('noteModal').classList.add('open');
+            setTimeout(() => document.getElementById('noteText').focus(), 20);
+        }
+
+        function hideNoteModal() {
+            document.getElementById('noteModal').classList.remove('open');
+            currentNoteCard = null;
+        }
+
+        function closeNoteModal(event) {
+            if (event.target.id === 'noteModal') hideNoteModal();
+        }
+
+        function clearCurrentNote() {
+            document.getElementById('noteText').value = '';
+        }
+
+        async function saveCurrentNote() {
+            if (!currentNoteCard) return;
+            const card = currentNoteCard;
+            const keyword = card.dataset.keyword;
+            const charId = card.dataset.charId;
+            const note = document.getElementById('noteText').value;
+            try {
+                const resp = await fetch('/admin/single_candidate_cleaner/note', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({keyword, char_id: charId, note})
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.error || '保存失敗');
+                }
+                card.dataset.note = data.note || '';
+                const flag = card.querySelector('.note-flag');
+                if (flag) flag.classList.toggle('hidden', !(data.note || '').trim());
+                hideNoteModal();
+            } catch (err) {
+                alert(err.message || '保存失敗');
+            }
+        }
+
+        function clearModalObjectUrl() {
+            if (modalObjectUrl) {
+                URL.revokeObjectURL(modalObjectUrl);
+                modalObjectUrl = null;
+            }
+        }
+
+        function captureBaseSize(img) {
+            if (!img.dataset.baseW) {
+                const rect = img.getBoundingClientRect();
+                if (rect.width > 0) img.dataset.baseW = rect.width;
+            }
+        }
+
+        function getTargetBox(img) {
+            if (!img || !img.dataset.targetBox) return null;
+            try {
+                const box = JSON.parse(img.dataset.targetBox);
+                const imageWidth = Number(img.dataset.imageWidth || img.naturalWidth);
+                const imageHeight = Number(img.dataset.imageHeight || img.naturalHeight);
+                if (!Number.isFinite(box.x) || !Number.isFinite(box.y) ||
+                    !Number.isFinite(box.w) || !Number.isFinite(box.h) ||
+                    !Number.isFinite(imageWidth) || !Number.isFinite(imageHeight) ||
+                    imageWidth <= 0 || imageHeight <= 0) return null;
+                return {...box, imageWidth, imageHeight};
+            } catch (_) {
+                return null;
+            }
+        }
+
+        function calculateFocusZoom(img) {
+            const box = getTargetBox(img);
+            if (!box) return 2.4;
+            captureBaseSize(img);
+            const baseW = Number(img.dataset.baseW || img.getBoundingClientRect().width);
+            const baseScale = baseW / box.imageWidth;
+            const baseTargetSize = Math.max(box.w, box.h) * baseScale;
+            if (!Number.isFinite(baseTargetSize) || baseTargetSize <= 0) return 2.4;
+            const desiredTargetSize = window.innerWidth < 768 ? 78 : 94;
+            return Math.min(Math.max(desiredTargetSize / baseTargetSize, 1.6), 5.8);
+        }
+
+        function applyOriginalZoom(animate = true) {
+            const img = document.getElementById('modalImage');
+            if (!img) return;
+            captureBaseSize(img);
+            const baseW = Number(img.dataset.baseW || img.getBoundingClientRect().width);
+            if (currentZoom <= 1.001) {
+                img.classList.remove('zoomed');
+                img.style.width = '';
+                img.style.height = '';
+                return;
+            }
+            img.classList.add('zoomed');
+            img.style.transition = animate ? '' : 'none';
+            img.style.width = `${Math.round(baseW * currentZoom)}px`;
+            img.style.height = 'auto';
+            if (!animate) {
+                void img.offsetWidth;
+                img.style.transition = '';
+            }
+        }
+
+        function focusOriginalTarget(animate = false) {
+            const img = document.getElementById('modalImage');
+            const body = document.getElementById('modalBody');
+            const box = getTargetBox(img);
+            if (!img || !body || !box) return;
+            const renderedW = img.getBoundingClientRect().width;
+            const renderedH = img.getBoundingClientRect().height;
+            const scaleX = renderedW / box.imageWidth;
+            const scaleY = renderedH / box.imageHeight;
+            const targetCenterX = img.offsetLeft + ((box.x + box.w / 2) * scaleX);
+            const targetCenterY = img.offsetTop + ((box.y + box.h / 2) * scaleY);
+            body.scrollTo({
+                left: Math.max(0, targetCenterX - body.clientWidth * 0.5),
+                top: Math.max(0, targetCenterY - body.clientHeight * 0.42),
+                behavior: animate ? 'smooth' : 'auto'
+            });
+        }
+
+        function zoomOriginalImage(factor) {
+            const img = document.getElementById('modalImage');
+            if (!img) return;
+            currentZoom = Math.min(Math.max(currentZoom * factor, 0.5), 6);
+            applyOriginalZoom(true);
+            setTimeout(() => focusOriginalTarget(true), 240);
+        }
+
+        function resetOriginalZoom() {
+            currentZoom = 1;
+            applyOriginalZoom(true);
+            const body = document.getElementById('modalBody');
+            if (body) body.scrollTo({left: 0, top: 0, behavior: 'smooth'});
+        }
+
+        function toggleOriginalZoom() {
+            const img = document.getElementById('modalImage');
+            if (!img) return;
+            if (img.classList.contains('zoomed')) {
+                resetOriginalZoom();
+            } else {
+                currentZoom = calculateFocusZoom(img);
+                applyOriginalZoom(true);
+                setTimeout(() => focusOriginalTarget(true), 240);
+            }
+        }
+
+        async function showOriginalImage(charId) {
+            const modal = document.getElementById('originalModal');
+            const body = document.getElementById('modalBody');
+            const title = document.getElementById('modalTitle');
+            const openLink = document.getElementById('modalOpenLink');
+            clearModalObjectUrl();
+            currentZoom = 1;
+            title.textContent = `原圖 ${charId}`;
+            body.classList.add('loading');
+            body.textContent = '載入中...';
+            openLink.href = `/get_original_image/${encodeURIComponent(charId)}`;
+            modal.classList.add('open');
+            try {
+                const resp = await fetch(`/get_original_image/${encodeURIComponent(charId)}`);
+                if (!resp.ok) {
+                    let message = '無法載入原圖';
+                    try {
+                        const data = await resp.json();
+                        if (data.error) message = data.error;
+                    } catch (_) {}
+                    throw new Error(message);
+                }
+                const targetBox = resp.headers.get('X-Target-Box') || '';
+                const imageWidth = resp.headers.get('X-Original-Image-Width') || '';
+                const imageHeight = resp.headers.get('X-Original-Image-Height') || '';
+                const blob = await resp.blob();
+                modalObjectUrl = URL.createObjectURL(blob);
+                body.classList.remove('loading');
+                body.innerHTML = '';
+                const img = document.createElement('img');
+                img.id = 'modalImage';
+                img.src = modalObjectUrl;
+                img.alt = '原圖';
+                img.dataset.targetBox = targetBox;
+                img.dataset.imageWidth = imageWidth;
+                img.dataset.imageHeight = imageHeight;
+                img.addEventListener('click', toggleOriginalZoom);
+                img.addEventListener('load', () => {
+                    requestAnimationFrame(() => {
+                        currentZoom = calculateFocusZoom(img);
+                        applyOriginalZoom(false);
+                        requestAnimationFrame(() => focusOriginalTarget(false));
+                    });
+                });
+                body.appendChild(img);
+            } catch (err) {
+                body.classList.add('loading');
+                body.textContent = err.message || '無法載入原圖';
+            }
+        }
+
+        function hideOriginalModal() {
+            document.getElementById('originalModal').classList.remove('open');
+            clearModalObjectUrl();
+            const body = document.getElementById('modalBody');
+            body.classList.add('loading');
+            body.textContent = '載入中...';
+        }
+
+        function closeOriginalImage(event) {
+            if (event.target.id === 'originalModal') hideOriginalModal();
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                hideOriginalModal();
+                hideNoteModal();
+            }
+        });
+
+        window.addEventListener('load', () => {
+            setupSectionObserver();
+            setActiveKeyword(selectedKeyword, false);
+            loadSections(nextStart, {scrollToKeyword: selectedKeyword});
+            const sentinel = document.getElementById('loadingSentinel');
+            sentinel.addEventListener('click', () => {
+                if (hasMoreSections && !loadingSections) loadSections(nextStart);
+            });
+            const loaderObserver = new IntersectionObserver(entries => {
+                if (entries.some(entry => entry.isIntersecting) && hasMoreSections && !loadingSections) {
+                    loadSections(nextStart);
+                }
+            }, {root: null, rootMargin: '700px 0px 700px 0px'});
+            loaderObserver.observe(sentinel);
+            window.addEventListener('scroll', triggerLoadMoreIfNeeded, {passive: true});
+            window.addEventListener('resize', triggerLoadMoreIfNeeded);
+        });
+    </script>
+</body>
+</html>
