@@ -1,56 +1,61 @@
-# 六朝写经异体字编年字典 · 在线整理平台
+# 六朝写经异体字编年平台
 
-这是整理平台的程序。字图、原卷、数据库、账号和标注记录不在本仓库中。没有这些数据时，程序可以启动，检索和出图没有结果。
+本仓库公布整理平台的程序，供方法复核。单字图像、原卷扫描、数据库、账号与标注记录均不在其中。未配置数据时，服务可以启动，检索与出图没有结果。
 
-本地原件在 `/Users/lizhouyuan/PycharmProjects/深度學習/1 六朝寫經/「測試」線上佈局`。下表「本地文件」都相对这个目录。公开仓库里改了文件名，本地原件没有改。
+## 数据如何分工
 
-## 各部分怎么配合
+一条字图记录回答四个问题：图像编号、所属写卷、在原卷上的坐标、以及机器识别、佛典对字和人工校对。纪年、题名与题记记在写卷目录中，通过写卷编号与字图相连。
 
-一次整理沿着这条线走：
+标注、任务和日志单独成库，按账号存放。代表字形确认之后，才写回字图库。模型给出的候选只供复核，不自动成为代表字形。查看原卷时，程序使用库中已有坐标，在整页扫描图上标出该字。
 
-1. 读者打开 `templates/login.html`，账号写在本地的 `users.json`，不在仓库里。
-2. 登录后进入 `templates/dashboard.html`，看到分配给自己的字头。任务存在标注库。
-3. 点进某个字头，主界面 `templates/workspace.html` 由 `app.py` 填数据。字图、释文、坐标来自字图库；残损、误入、字形分类和备注来自标注库，按账号分开。
-4. 选定代表字形后，写回字图库的 `default_keyword`。模型候选只作提示，不自动成为代表字形。
-5. 查看原卷时，`app.py` 用字图库里已有的坐标，在整页扫描图上框出该字。
-6. 需要对照辞书时，`dict_database.py` 读取本地辞书库。辞书全文不在本仓库。
-7. 按字头导出 Word 时，`app.py` 把年代简表、校对字段、单字图和红框原图写进一个文件。
-8. 管理页负责分派字头、查看写卷目录、核对模型覆盖。普通整理不经过这些页面。
+## 一次整理如何走完
 
-字图库回答「这是哪张字、在哪一卷、坐标是多少、释文是什么」。标注库回答「谁标了什么、字头任务分给了谁」。两者用字图编号相连，不把每个人的标注写进字图库。
+1. 登录后进入任务列表，看到分配给当前账号的字头。
+2. 打开一个字头，主界面按写卷排列字图。字图来自字图库，残损、误入、字形分类和备注来自标注库。
+3. 选定代表字形并写回字图库。需要核对时，可调出辞书，或回到标有红框的原卷。
+4. 按字头导出 Word。上编按年代排列字图，下编列出校对字段、单字图和原卷定位。
+5. 管理端负责分派字头、核对写卷目录，并区分人工确认与模型候选。
 
-## 文件
+## 程序组成
 
-| 公开文件 | 本地文件 | 作用 |
-| --- | --- | --- |
-| `app.py` | `「text」4 全部字圖的主页2025年06月25日09.py` | 入口。检索、标注、原图、导出、页面路由都在这里 |
-| `templates/workspace.html` | `「text」7. [全部]六朝寫經異體字典架構2025年06月25日09.html` | 字图整理主界面 |
-| `templates/login.html` | `login.html` | 登录 |
-| `templates/dashboard.html` | `dashboard.html` | 登录后的任务列表 |
-| `templates/admin.html` | `admin.html` | 分派字头、查看账号 |
-| `templates/admin_sources.html` | `admin_default_sources.html` | 人工确认与模型候选的字头总览 |
-| `templates/admin_coverage.html` | `admin_ai_coverage_audit.html` | 模型是否覆盖到已有字头 |
-| `templates/admin_single_candidates.html` | `admin_single_candidates.html` | 只有一条候选的字头 |
-| `templates/admin_candidate_review.html` | `admin_single_candidate_cleaner.html` | 复核这些单条候选 |
-| `templates/admin_manuscripts.html` | `admin_manuscripts.html` | 写卷目录与库内写卷码的对照 |
-| `templates/manuscripts.html` | `manuscripts.html` | 按写卷浏览 |
-| `templates/manuscript_detail.html` | `manuscript_detail.html` | 一卷之内的字图 |
-| `templates/manuscript_char.html` | `manuscript_char.html` | 一卷中某一个字的各张字图 |
-| `templates/demo_stats.html` | `demo_stats.html` | 演示账号的使用统计 |
-| `char_database.py` | 同名 | 字图库 `characters.db` |
-| `database.py` | 同名 | 标注库 `students.db`：标注、任务、日志 |
-| `data_helpers.py` | 同名 | 把字图记录和标注合并、排序 |
-| `annotation_lookup.py` | `utils.py` | 按字图编号取出一条标注 |
-| `dict_database.py` | 同名 | 读取辞书库并改写页面里的图片地址 |
-| `ai_review_blueprint.py` | 同名 | 模型候选的审核页，挂在 `/ai_review` |
-| `wsgi.py` | 同名 | 生产环境入口，加载 `app.py` |
-| `gunicorn_config.py` | 同名 | 生产环境进程配置 |
-| `start_server.sh` | 同名 | 用 gunicorn 启动 |
-| `requirements.txt` | 同名 | Python 依赖 |
-| `static/` | `static/` | 页面样式和脚本 |
-| `product_manual.md` | 同名 | 整理时的操作说明：残损、误入、代表字形、任务怎么点 |
+| 文件 | 作用 |
+| --- | --- |
+| `app.py` | 服务入口：检索、标注、原卷回溯、字头导出 |
+| `templates/workspace.html` | 字图整理主界面 |
+| `templates/login.html` | 登录 |
+| `templates/dashboard.html` | 当前账号的字头任务 |
+| `templates/manuscripts.html` | 按写卷浏览 |
+| `templates/manuscript_detail.html` | 一卷之内的字图 |
+| `templates/manuscript_char.html` | 同一写卷中某一字的各张字图 |
+| `templates/admin.html` | 分派字头与账号 |
+| `templates/admin_sources.html` | 人工确认与模型候选的字头总览 |
+| `templates/admin_coverage.html` | 模型覆盖情况 |
+| `templates/admin_single_candidates.html` | 仅有一条候选的字头 |
+| `templates/admin_candidate_review.html` | 复核这些候选 |
+| `templates/admin_manuscripts.html` | 写卷目录与库内编号的对照 |
+| `char_database.py` | 字图库 |
+| `database.py` | 标注、任务与日志 |
+| `data_helpers.py` | 合并字图记录与标注，并处理排序 |
+| `annotation_lookup.py` | 按图像编号读取一条标注 |
+| `dict_database.py` | 读取辞书，供对照 |
+| `ai_review_blueprint.py` | 模型候选的审核，路径为 `/ai_review` |
+| `wsgi.py` | 生产环境入口 |
+| `static/` | 样式与脚本 |
 
-## 运行
+## 准备与启动
+
+将下列文件放在 `data/` 目录，或用环境变量另行指定：
+
+| 环境变量 | 内容 |
+| --- | --- |
+| `SIX_DYN_CHAR_DB` | 字图库，默认 `data/characters.db` |
+| `SIX_DYN_STUDENTS_DB` | 标注库，默认 `data/students.db` |
+| `SIX_DYN_IMAGE_FOLDER` | 单字图像目录 |
+| `SIX_DYN_ORIGINAL_FOLDER` | 原卷扫描图目录 |
+| `SIX_DYN_CATALOG_XLSX` | 写卷目录 |
+| `SIX_DYN_VARIANT_TABLE` | 异体对照表，默认 `data/variant.txt` |
+
+账号写在仓库外的 `users.json`。辞书库为 `data/dictionaries.db`，其文本不随程序发布。
 
 ```bash
 pip install -r requirements.txt
@@ -60,13 +65,13 @@ export SIX_DYN_CATALOG_XLSX="/path/to/catalog.xlsx"
 python3 app.py --port 5010
 ```
 
-数据库文件放在本目录的 `網頁部署/` 下，文件名是 `characters.db` 和 `students.db`。这两个文件不要提交。账号写在 `users.json`，也不要提交。
+生产环境使用 `./start_server.sh 5010`。该脚本通过 `wsgi.py` 加载 `app.py`。
 
-生产环境用 `./start_server.sh 5010`。它通过 `wsgi.py` 加载 `app.py`。
+## 发布范围
 
-## 不包含的内容
+本仓库只含程序。下列内容不发布，也不随程序授予使用许可：
 
-- 单字图像和原卷扫描图
-- `characters.db`、`students.db`、辞书库、模型候选库
-- 账号、密码、日志和标注明细
+- 单字图像与原卷扫描图
+- 字图库、标注库、辞书库与模型候选库
+- 账号、口令、日志与标注明细
 - 第三方辞书全文

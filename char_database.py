@@ -16,7 +16,7 @@ import threading
 # 可用環境變數 SIX_DYN_CHAR_DB 覆蓋（例如把 DB 放在單獨磁盤）
 _MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 CHAR_DB_PATH = os.environ.get('SIX_DYN_CHAR_DB') or \
-    os.path.join(_MODULE_DIR, '網頁部署', 'characters.db')
+    os.path.join(_MODULE_DIR, "data", "characters.db")
 
 # 注意：不再使用全局 db_lock 串行化所有操作。
 # WAL 模式下 SQLite 自己處理讀寫併發；業務層串行化反而讓讀請求互相阻塞。

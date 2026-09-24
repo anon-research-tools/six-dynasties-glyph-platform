@@ -1,4 +1,4 @@
-"""Dictionary lookup helpers — reads 網頁部署/dictionaries.db + 網頁部署/dict_assets/.
+"""Dictionary lookup helpers — reads data/dictionaries.db and data/dict_assets/.
 
 Exposes:
     lookup(char) -> {'jiaoyubu': html_or_None, 'dunhuang': html_or_None}
@@ -20,8 +20,8 @@ import threading
 from urllib.parse import quote
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(_HERE, "網頁部署", "dictionaries.db")
-ASSETS_DIR = os.path.join(_HERE, "網頁部署", "dict_assets")
+DB_PATH = os.path.join(_HERE, "data", "dictionaries.db")
+ASSETS_DIR = os.path.join(_HERE, "data", "dict_assets")
 
 _SOURCES = ("jiaoyubu", "dunhuang")
 

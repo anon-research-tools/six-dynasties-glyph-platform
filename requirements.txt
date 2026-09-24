@@ -1,5 +1,4 @@
-# 生產環境依賴（Aliyun ECS 用 pip install -r requirements.txt）
-# 版本範圍基於本地驗證組合；大版本升級前請測試
+# Runtime dependencies. Pin ranges to the versions this application was verified with.
 Flask>=3.1,<3.2
 Werkzeug>=3.1,<3.2
 Jinja2>=3.1,<4

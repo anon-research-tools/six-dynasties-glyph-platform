@@ -1,12 +1,12 @@
-# 账号与密钥
+# Credentials
 users.json
 users.json.*
 .flask_secret
 .env
 .env.*
 
-# 数据与影像（不随代码发布）
-網頁部署/
+# Research data and images are not part of this repository
+data/
 *.db
 *.db-wal
 *.db-shm
@@ -17,10 +17,8 @@ cache/
 backups/
 downloads/
 temp_images/
-賬戶密碼和進度/
-字典/
 
-# Python / 系统
+# Python
 __pycache__/
 *.pyc
 .DS_Store

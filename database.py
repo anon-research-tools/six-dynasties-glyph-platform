@@ -9,7 +9,7 @@ from datetime import datetime
 # 数据库路径：相對當前模塊（跨平台），可用 SIX_DYN_STUDENTS_DB 環境變數覆蓋
 _MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get('SIX_DYN_STUDENTS_DB') or \
-    os.path.join(_MODULE_DIR, '網頁部署', 'students.db')
+    os.path.join(_MODULE_DIR, "data", "students.db")
 
 # 注意：不再使用全局 db_lock 串行化所有操作。
 # WAL 模式下 SQLite 自己處理讀寫併發；業務層串行化反而讓讀請求互相阻塞。

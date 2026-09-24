@@ -68,7 +68,7 @@ AI_AUDIT_OCR_FIELDS = ('ocr_txt', 'ocr_col', 'ocr_txt正', 'ocr_col正')
 AI_AUDIT_WEAK_FIELDS = ('alternatives',)
 AI_AUDIT_STRONG_FIELDS = AI_AUDIT_AUTH_FIELDS + AI_AUDIT_OCR_FIELDS
 AI_AUDIT_SEARCH_FIELDS = AI_AUDIT_STRONG_FIELDS + AI_AUDIT_WEAK_FIELDS
-PROGRESS_XLSX_PATH = os.path.join(AI_PICK_DB_DIR, '賬戶密碼和進度', '篩選字圖進度表2026年04月15日15.xlsx')
+PROGRESS_XLSX_PATH = os.environ.get("SIX_DYN_PROGRESS_XLSX") or ""
 MANUSCRIPT_CATALOG_XLSX_PATH = os.environ.get("SIX_DYN_CATALOG_XLSX") or ""
 _AI_SOURCE_CACHE = {}
 _AI_SOURCE_CACHE_LOCK = threading.Lock()
@@ -122,11 +122,9 @@ except Exception as _dict_exc:
     dict_database = None
     logging.getLogger(__name__).warning(f"dict_database 不可用: {_dict_exc}")
 
-# ======== 自訂路徑區（請根據你本地環境修改） ========
-# 路徑配置：優先讀環境變數（雲部署用），否則用相對路徑（本地開發用）。
-# 大圖片目錄（~GB 級）通常不跟代碼倉庫一起走，所以用 SIX_DYN_* 環境變數指向。
+# 路径由环境变量指定。影像与数据库不随本仓库发布。
 _PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-_DB_DIR = os.path.join(_PROJECT_DIR, '網頁部署')
+_DB_DIR = os.path.join(_PROJECT_DIR, "data")
 SINGLE_CANDIDATE_CLEANER_DB_PATH = os.path.join(_PROJECT_DIR, 'single_candidate_cleaner.db')
 SINGLE_CANDIDATE_CLEANER_BACKUP_DIR = os.path.join(_PROJECT_DIR, 'backups', 'single_candidate_cleaner')
 SINGLE_CANDIDATE_THUMB_DIR = os.path.join(_PROJECT_DIR, 'cache', 'single_candidate_thumbs_v1')
@@ -148,7 +146,7 @@ ORIGINAL_IMAGE_FOLDER = os.environ.get('SIX_DYN_ORIGINAL_FOLDER') or \
 CSV_PATH = os.path.join(_DB_DIR, '5全部98萬字圖+篩線上處理+超過3個字符的单元格改为空+判斷不一致.csv')
 DEFAULT_DB_PATH = os.path.join(_DB_DIR, 'default_keyword.db')
 INDEX_CACHE_FILE = os.path.join(_DB_DIR, 'image_index.pkl')
-VARIANT_TABLE_PATH = os.path.join(_PROJECT_DIR, '字典', 'variant.txt')
+VARIANT_TABLE_PATH = os.environ.get("SIX_DYN_VARIANT_TABLE") or os.path.join(_DB_DIR, "variant.txt")
 CHAR_DATA_CACHE_FILE = os.path.join(_DB_DIR, 'char_data.pkl')
 HTML_FILE = "workspace.html"
 USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'users.json')
@@ -4170,7 +4168,7 @@ def admin_page():
     import sqlite3 as _sqlite3
     _settings = {}
     try:
-        _conn = _sqlite3.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), '網頁部署', 'students.db'))
+        _conn = _sqlite3.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'students.db'))
         _conn.row_factory = _sqlite3.Row
         for row in _conn.execute('SELECT * FROM account_settings').fetchall():
             _settings[row['student_id']] = dict(row)
@@ -4823,7 +4821,7 @@ def admin_create_account():
 
     # 創建 account_settings
     import sqlite3 as _sq
-    _conn = _sq.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), '網頁部署', 'students.db'))
+    _conn = _sq.connect(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'students.db'))
     _conn.execute('''
         INSERT OR IGNORE INTO account_settings (student_id, enabled, display_name)
         VALUES (?, 1, ?)

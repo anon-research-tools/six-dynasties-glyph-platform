@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify, render_template_string, request, abort
 
 ROOT = Path(__file__).resolve().parent
 AI_PICKS_DB = ROOT / "ai_picks.db"
-CHAR_DB = ROOT / "網頁部署" / "characters.db"
+CHAR_DB = ROOT / "data" / "characters.db"
 
 ai_review_bp = Blueprint("ai_review", __name__, url_prefix="/ai_review")
 
