@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: 如果使用本程序，请引用此仓库。
+title: 六朝写经异体字编年平台
+authors:
+  - family-names: Li
+    given-names: Zhouyuan
+    affiliation: Nanjing University
+repository-code: https://github.com/anon-research-tools/six-dynasties-glyph-platform
+type: software
+keywords:
+  - digital humanities
+  - Chinese manuscripts
+  - variant characters
+  - Dunhuang
